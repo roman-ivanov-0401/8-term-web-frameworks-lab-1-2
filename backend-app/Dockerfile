@@ -10,5 +10,6 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
 COPY --from=builder /app/dist ./dist
-EXPOSE 3051
+RUN mkdir -p uploads
+EXPOSE 3050
 CMD ["node", "dist/main"]
