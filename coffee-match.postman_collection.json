@@ -1,0 +1,570 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "Coffee Match API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman collection for the Coffee Match application. Auth endpoints target {{authUrl}} (port 3051), all other endpoints target {{mainUrl}} (port 3050)."
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost",
+      "type": "string",
+      "description": "Nginx reverse proxy base URL"
+    },
+    {
+      "key": "authUrl",
+      "value": "http://localhost:3051",
+      "type": "string",
+      "description": "Auth service direct URL"
+    },
+    {
+      "key": "mainUrl",
+      "value": "http://localhost:3050",
+      "type": "string",
+      "description": "Main backend service direct URL"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string",
+      "description": "JWT bearer token (populated automatically by login/register tests)"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.token) {",
+                  "    pm.collectionVariables.set(\"token\", json.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_name\": \"john_doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"secret123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{authUrl}}/auth/register",
+              "host": ["{{authUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Register a new user. On success (201) the JWT token is automatically saved to the {{token}} collection variable."
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.token) {",
+                  "    pm.collectionVariables.set(\"token\", json.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"secret123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{authUrl}}/auth/login",
+              "host": ["{{authUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Authenticate an existing user. On success (200) the JWT token is automatically saved to the {{token}} collection variable."
+          },
+          "response": []
+        },
+        {
+          "name": "Me (Current User)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{authUrl}}/auth/me",
+              "host": ["{{authUrl}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Returns the currently authenticated user's profile. Requires a valid JWT token."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{authUrl}}/auth/logout",
+              "host": ["{{authUrl}}"],
+              "path": ["auth", "logout"]
+            },
+            "description": "Logs out the current user. JWT is stateless so this is a no-op on the server side. Returns 204 No Content."
+          },
+          "response": []
+        }
+      ],
+      "description": "Authentication endpoints — register, login, get current user, logout."
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{mainUrl}}/users/1",
+              "host": ["{{mainUrl}}"],
+              "path": ["users", "1"]
+            },
+            "description": "Retrieve a user's public profile by user_id. No authentication required."
+          },
+          "response": []
+        },
+        {
+          "name": "Update My Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "user_name",
+                  "value": "john_doe_updated",
+                  "type": "text"
+                },
+                {
+                  "key": "user_description",
+                  "value": "Coffee enthusiast and latte art lover.",
+                  "type": "text"
+                },
+                {
+                  "key": "photo",
+                  "type": "file",
+                  "src": [],
+                  "description": "Optional profile photo (Blob/File)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{mainUrl}}/users/me",
+              "host": ["{{mainUrl}}"],
+              "path": ["users", "me"]
+            },
+            "description": "Update the authenticated user's profile. Accepts multipart/form-data. The photo field is optional."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete My Profile",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{mainUrl}}/users/me",
+              "host": ["{{mainUrl}}"],
+              "path": ["users", "me"]
+            },
+            "description": "Delete the authenticated user's account. Returns 204 No Content."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Social Link",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"link\": \"https://instagram.com/john_doe\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{mainUrl}}/users/1/social-links",
+              "host": ["{{mainUrl}}"],
+              "path": ["users", "1", "social-links"]
+            },
+            "description": "Add a social media link to a user's profile. Returns 201 with the created social link."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Social Link",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{mainUrl}}/users/1/social-links/1",
+              "host": ["{{mainUrl}}"],
+              "path": ["users", "1", "social-links", "1"]
+            },
+            "description": "Remove a specific social link from a user's profile. Returns 204 No Content."
+          },
+          "response": []
+        }
+      ],
+      "description": "User profile management — get profile, update profile, manage social links."
+    },
+    {
+      "name": "Drinks",
+      "item": [
+        {
+          "name": "Get Drinks List",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{mainUrl}}/drinks?page=1&per_page=10",
+              "host": ["{{mainUrl}}"],
+              "path": ["drinks"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
+                },
+                {
+                  "key": "per_page",
+                  "value": "10",
+                  "description": "Items per page (default: 20)"
+                },
+                {
+                  "key": "category_ids",
+                  "value": "1,2",
+                  "description": "Filter by category IDs (comma-separated or repeated param)",
+                  "disabled": true
+                },
+                {
+                  "key": "ingredients",
+                  "value": "3,5",
+                  "description": "Filter by ingredient IDs (comma-separated or repeated param)",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "latte",
+                  "description": "Search by drink name",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Retrieve a paginated list of drinks. Authentication is optional — if a valid token is provided, isInFavorites and score fields are populated per user."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Drink by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{mainUrl}}/drinks/1",
+              "host": ["{{mainUrl}}"],
+              "path": ["drinks", "1"]
+            },
+            "description": "Retrieve full details of a single drink including ingredients, category, and the user's rating. Requires authentication."
+          },
+          "response": []
+        }
+      ],
+      "description": "Drinks catalogue — list and detail endpoints."
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{mainUrl}}/categories",
+              "host": ["{{mainUrl}}"],
+              "path": ["categories"]
+            },
+            "description": "Retrieve all drink categories. Requires authentication."
+          },
+          "response": []
+        }
+      ],
+      "description": "Drink categories list."
+    },
+    {
+      "name": "Ingredients",
+      "item": [
+        {
+          "name": "Get All Ingredients",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{mainUrl}}/ingredients",
+              "host": ["{{mainUrl}}"],
+              "path": ["ingredients"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "milk",
+                  "description": "Optional search string to filter ingredients by name",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Retrieve all ingredients, optionally filtered by a search string. Requires authentication."
+          },
+          "response": []
+        }
+      ],
+      "description": "Ingredients list with optional search."
+    },
+    {
+      "name": "Favorites",
+      "item": [
+        {
+          "name": "Get User Favorites",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{mainUrl}}/users/1/favorites?page=1&per_page=10",
+              "host": ["{{mainUrl}}"],
+              "path": ["users", "1", "favorites"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
+                },
+                {
+                  "key": "per_page",
+                  "value": "10",
+                  "description": "Items per page (default: 20)"
+                }
+              ]
+            },
+            "description": "Retrieve a paginated list of a user's favorite drinks. Requires authentication."
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle Favorite (Add / Remove)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"drink_id\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{mainUrl}}/users/1/favorites",
+              "host": ["{{mainUrl}}"],
+              "path": ["users", "1", "favorites"]
+            },
+            "description": "Toggle a drink in/out of a user's favorites. If the drink is not in favorites it is added (201); if it is already there it is removed. Requires authentication."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Drink Rating",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 4\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{mainUrl}}/users/1/favorites/1",
+              "host": ["{{mainUrl}}"],
+              "path": ["users", "1", "favorites", "1"]
+            },
+            "description": "Update the user's rating for a favorited drink (1–5). The drink must already be in favorites. Requires authentication."
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Drink from Favorites",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{mainUrl}}/users/1/favorites/1",
+              "host": ["{{mainUrl}}"],
+              "path": ["users", "1", "favorites", "1"]
+            },
+            "description": "Remove a drink from a user's favorites. Returns 204 No Content. Requires authentication."
+          },
+          "response": []
+        }
+      ],
+      "description": "Favorites management — list, toggle, rate, and remove favorite drinks."
+    },
+    {
+      "name": "Matches",
+      "item": [
+        {
+          "name": "Get Matches",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{mainUrl}}/matches",
+              "host": ["{{mainUrl}}"],
+              "path": ["matches"]
+            },
+            "description": "Retrieve a list of users whose taste profile (favorite drinks and ratings) matches the authenticated user. Returns match_score and common_drinks. Requires authentication."
+          },
+          "response": []
+        }
+      ],
+      "description": "Match discovery — users with similar taste profiles."
+    }
+  ]
+}
