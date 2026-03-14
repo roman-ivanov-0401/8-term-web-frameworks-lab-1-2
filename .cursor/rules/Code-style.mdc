@@ -1,0 +1,5 @@
+---
+alwaysApply: true
+---
+
+Внутри react-комопнентов создавай функции через function. Boolean-пропсы всегда перевадай явно field={true}
