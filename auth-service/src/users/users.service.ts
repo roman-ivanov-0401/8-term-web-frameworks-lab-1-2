@@ -2,12 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
+import { UserProfile } from './user-profile.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepo: Repository<User>,
+    @InjectRepository(UserProfile)
+    private readonly profileRepo: Repository<UserProfile>,
   ) {}
 
   async findByEmail(email: string): Promise<User | null> {
@@ -24,6 +27,12 @@ export class UsersService {
     password_hash: string;
   }): Promise<User> {
     const user = this.usersRepo.create(dto);
-    return this.usersRepo.save(user);
+    const savedUser = await this.usersRepo.save(user);
+
+    await this.profileRepo.save(
+      this.profileRepo.create({ user_id: Number(savedUser.user_id) }),
+    );
+
+    return savedUser;
   }
 }
