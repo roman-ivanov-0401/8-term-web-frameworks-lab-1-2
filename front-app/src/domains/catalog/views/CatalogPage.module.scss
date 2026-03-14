@@ -1,0 +1,255 @@
+@use '../../../views/styles/variables' as *;
+
+// ─── Page wrapper (full viewport, fixes white bars) ───────────────────────────
+
+.page {
+	min-height: 100vh;
+	background: $color-bg-app;
+}
+
+// ─── Sidebar + main layout ────────────────────────────────────────────────────
+
+.layout {
+	display: flex;
+	min-height: 100vh;
+	max-width: 1400px;
+	margin: 0 auto;
+
+	@media (max-width: 768px) {
+		flex-direction: column;
+	}
+}
+
+// ─── Category sidebar ─────────────────────────────────────────────────────────
+
+.sidebar {
+	width: 220px;
+	flex-shrink: 0;
+	padding: 32px 20px 32px 24px;
+	border-right: 1px solid $color-border;
+
+	@media (max-width: 768px) {
+		width: 100%;
+		padding: 16px 24px;
+		border-right: none;
+		border-bottom: 1px solid $color-border;
+	}
+}
+
+.sidebarTitle {
+	font-size: 13px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: $color-primary-light;
+	margin: 0 0 12px;
+}
+
+.categoryList {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+
+	@media (max-width: 768px) {
+		flex-direction: row;
+		flex-wrap: wrap;
+		gap: 6px;
+	}
+}
+
+.categoryItem {
+	display: block;
+	width: 100%;
+	text-align: left;
+	background: none;
+	border: none;
+	border-radius: 8px;
+	padding: 8px 12px;
+	font-size: 14px;
+	color: $color-primary-dark;
+	cursor: pointer;
+	transition: background 0.15s, color 0.15s;
+
+	&:hover {
+		background: rgba($color-primary, 0.07);
+	}
+
+	@media (max-width: 768px) {
+		width: auto;
+		white-space: nowrap;
+		border: 1px solid $color-border;
+		padding: 4px 12px;
+	}
+}
+
+.categoryItemActive {
+	background: $color-primary;
+	color: #fff;
+	font-weight: 600;
+
+	&:hover {
+		background: $color-primary-dark;
+	}
+}
+
+// ─── Main content area ────────────────────────────────────────────────────────
+
+.main {
+	flex: 1;
+	min-width: 0;
+	padding: 32px 24px;
+}
+
+.header {
+	margin-bottom: 28px;
+}
+
+.title {
+	font-size: 28px;
+	font-weight: 700;
+	color: $color-primary-dark;
+	margin: 0 0 16px;
+}
+
+.filters {
+	display: flex;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+.search {
+	flex: 1 1 240px;
+	min-width: 0;
+}
+
+.select {
+	flex: 1 1 260px;
+	min-width: 0;
+}
+
+// ─── Drink card ───────────────────────────────────────────────────────────────
+
+.card {
+	background: $color-bg-card;
+	border-radius: $radius-card;
+	overflow: hidden;
+	box-shadow: $shadow-card;
+	transition: box-shadow 0.2s, transform 0.2s;
+	cursor: pointer;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+
+	&:hover {
+		box-shadow: 0 6px 24px rgba(111, 78, 55, 0.22);
+		transform: translateY(-2px);
+
+		.image {
+			transform: scale(1.04);
+		}
+	}
+}
+
+.imageWrapper {
+	width: 100%;
+	aspect-ratio: 4 / 3;
+	overflow: hidden;
+	background: $color-bg-image;
+}
+
+.image {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+	transition: transform 0.3s;
+}
+
+.cardBody {
+	padding: 14px 16px 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	flex: 1;
+}
+
+.drinkName {
+	font-size: 15px;
+	color: $color-primary-dark;
+	display: block;
+}
+
+.ratingRow {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.rate {
+	font-size: 14px;
+}
+
+.ratingLabel {
+	font-size: 12px;
+	color: $color-primary-mid;
+}
+
+.notRated {
+	font-size: 13px;
+	color: $color-primary-light;
+	font-style: italic;
+}
+
+// ─── Floating "clear category" button ────────────────────────────────────────
+
+.clearBtn {
+	position: fixed;
+	bottom: 28px;
+	right: 28px;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 10px 20px;
+	background: $color-primary-dark;
+	color: #fff;
+	border: none;
+	border-radius: 24px;
+	font-size: 14px;
+	font-weight: 500;
+	cursor: pointer;
+	box-shadow: 0 4px 20px rgba(59, 42, 26, 0.35);
+	transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+	animation: slideUp 0.2s ease-out;
+	z-index: 100;
+
+	&:hover {
+		background: $color-primary;
+		transform: translateY(-2px);
+		box-shadow: 0 6px 24px rgba(59, 42, 26, 0.45);
+	}
+
+	&:active {
+		transform: translateY(0);
+	}
+
+	@media (max-width: 768px) {
+		bottom: 16px;
+		right: 16px;
+		padding: 8px 16px;
+		font-size: 13px;
+	}
+}
+
+@keyframes slideUp {
+	from {
+		transform: translateY(12px);
+		opacity: 0;
+	}
+	to {
+		transform: translateY(0);
+		opacity: 1;
+	}
+}
