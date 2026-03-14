@@ -14,7 +14,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { UsersService } from '../users/users.service';
-import { MeResponse } from '@shared/index';
+import { MeResponse } from '../shared';
 
 @ApiTags('auth')
 @Controller('auth')
