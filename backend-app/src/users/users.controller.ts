@@ -28,8 +28,8 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get(':user_id')
-  getProfile(@Param('user_id', ParseIntPipe) userId: number) {
-    return this.usersService.getProfile(userId);
+  getProfile(@Param('user_id') userId: string) {
+    return this.usersService.getProfile(Number(userId));
   }
 
   @Put('me')
@@ -71,7 +71,11 @@ export class UsersController {
     @Param('user_id', ParseIntPipe) targetUserId: number,
     @Body() dto: CreateSocialLinkDto,
   ) {
-    return this.usersService.addSocialLink(user.user_id, targetUserId, dto.link);
+    return this.usersService.addSocialLink(
+      user.user_id,
+      targetUserId,
+      dto.link,
+    );
   }
 
   @Delete(':user_id/social-links/:id')
@@ -83,6 +87,10 @@ export class UsersController {
     @Param('user_id', ParseIntPipe) targetUserId: number,
     @Param('id', ParseIntPipe) linkId: number,
   ) {
-    return this.usersService.removeSocialLink(user.user_id, targetUserId, linkId);
+    return this.usersService.removeSocialLink(
+      user.user_id,
+      targetUserId,
+      linkId,
+    );
   }
 }

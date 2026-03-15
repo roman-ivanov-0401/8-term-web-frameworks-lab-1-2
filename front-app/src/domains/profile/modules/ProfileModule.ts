@@ -1,4 +1,10 @@
-// ─── Payload types ────────────────────────────────────────────────────────────
+import type { UploadFile } from 'antd';
+import { authModule } from '../../auth/modules/AuthModule';
+import { profileRepository } from '../repositories/profileRepository';
+import { useCurrentUserStore } from '../../../models/currentUserModel';
+import { useProfileStore } from '../models/profileModel';
+
+export type { CurrentUser as UserProfile, CurrentUserSocialLink as SocialLink } from '../../../models/currentUserModel';
 
 export type UpdateProfilePayload = {
 	user_name: string;
@@ -10,32 +16,61 @@ export type AddSocialLinkPayload = {
 	link: string;
 };
 
-// ─── GET /users/:user_id ──────────────────────────────────────────────────────
+export const profileModule = {
+	getMyProfile: async (): Promise<void> => {
+		const me = await authModule.me();
+		const profile = await profileRepository.getProfile(me.user_id);
+		useCurrentUserStore.getState().setCurrentUser({
+			...profile,
+			user_name: me.user_name,
+			email: me.email,
+		});
 
-export function getProfile(userId: number): void {
-	console.log('GET /users/:user_id', { userId });
-}
+		console.log({ ...profile, email: me.email });
+	},
 
-// ─── PUT /users/me ────────────────────────────────────────────────────────────
+	updateProfile: async (payload: UpdateProfilePayload): Promise<void> => {
+		await profileRepository.updateProfile(payload);
+		useCurrentUserStore.getState().updateCurrentUser({
+			user_name: payload.user_name,
+			user_description: payload.user_description,
+		});
+		useProfileStore.getState().setEditOpen(false);
+	},
 
-export function updateProfile(payload: UpdateProfilePayload): void {
-	console.log('PUT /users/me', payload);
-}
+	deleteProfile: async (): Promise<void> => {
+		await profileRepository.deleteProfile();
+		useCurrentUserStore.getState().setCurrentUser(null);
+	},
 
-// ─── DELETE /users/me ─────────────────────────────────────────────────────────
+	addSocialLink: async (userId: number, payload: AddSocialLinkPayload): Promise<void> => {
+		const { social_link_id, link } = await profileRepository.addSocialLink(userId, payload);
+		useCurrentUserStore.getState().addSocialLink({ social_link_id, link, created_at: '', modified_at: '' });
+		useProfileStore.getState().setNewLinkValue('');
+	},
 
-export function deleteProfile(): void {
-	console.log('DELETE /users/me');
-}
+	deleteSocialLink: async (userId: number, socialLinkId: number): Promise<void> => {
+		await profileRepository.deleteSocialLink(userId, socialLinkId);
+		useCurrentUserStore.getState().removeSocialLink(socialLinkId);
+	},
 
-// ─── POST /users/:user_id/social-links ───────────────────────────────────────
+	openEditDrawer: (): void => {
+		useProfileStore.getState().setEditOpen(true);
+	},
 
-export function addSocialLink(userId: number, payload: AddSocialLinkPayload): void {
-	console.log(`POST /users/${userId}/social-links`, payload);
-}
+	closeEditDrawer: (): void => {
+		useProfileStore.getState().setEditOpen(false);
+	},
 
-// ─── DELETE /users/:user_id/social-links/:social_link_id ─────────────────────
+	setNewLinkValue: (value: string): void => {
+		useProfileStore.getState().setNewLinkValue(value);
+	},
 
-export function deleteSocialLink(userId: number, socialLinkId: number): void {
-	console.log(`DELETE /users/${userId}/social-links/${socialLinkId}`);
-}
+	setFileList: (fileList: UploadFile[]): void => {
+		useProfileStore.getState().setFileList(fileList);
+	},
+
+	resetFileList: (): void => {
+		useProfileStore.getState().setFileList([]);
+	},
+};

@@ -1,64 +1,28 @@
-import { useRef, useState } from 'react';
-import { Button, Rate, Tag } from 'antd';
+import { useEffect, useRef, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { Button, Rate, Spin, Tag } from 'antd';
 import { HeartFilled, HeartOutlined } from '@ant-design/icons';
+import { drinkModule, type DrinkDetail, type DrinkIngredient } from '../modules/DrinkModule';
 import s from './DrinkPage.module.scss';
-
-type Ingredient = {
-	ingredient_id: number;
-	name: string;
-	color: string;
-	percent: number;
-	description: string;
-};
-
-type Drink = {
-	drink_id: number;
-	name: string;
-	description: string;
-	category: { category_id: number; name: string };
-	ingredients: Ingredient[];
-	user_rating: number | null;
-	isInFavorites: boolean;
-};
-
-// Ingredients ordered top → bottom in the glass
-const MOCK_DRINK: Drink = {
-	drink_id: 1,
-	name: 'Капучино',
-	description:
-		'Классический итальянский кофейный напиток, приготовленный из двойного эспрессо и вспененного молока. Нежная молочная пенка и насыщенный кофейный вкус создают идеальный баланс. Принято подавать в керамической чашке объёмом 150–180 мл.',
-	category: { category_id: 2, name: 'Молочные напитки' },
-	ingredients: [
-		{ ingredient_id: 3, name: 'Молочная пена', color: '#FFF0DC', percent: 33, description: '' },
-		{ ingredient_id: 2, name: 'Вспененное молоко', color: '#D4A96A', percent: 34, description: '' },
-		{ ingredient_id: 1, name: 'Эспрессо', color: '#2C1204', percent: 33, description: '' },
-	],
-	user_rating: null,
-	isInFavorites: false,
-};
 
 // ─── Glass SVG constants ──────────────────────────────────────────────────────
 
 const SVG_W = 200;
 const SVG_H = 360;
 
-// Liquid area boundaries inside the glass shape
 const LIQ_TOP = 30;
 const LIQ_BOTTOM = 334;
-const LIQ_H = LIQ_BOTTOM - LIQ_TOP; // 304 px
+const LIQ_H = LIQ_BOTTOM - LIQ_TOP;
 
-// Clip path matching the glass interior (trapezoid)
 const GLASS_CLIP = 'M 30 30 L 170 30 L 156 334 L 44 334 Z';
-// Glass outer border path (slightly outside the clip)
 const GLASS_OUTER = 'M 20 18 L 180 18 L 165 344 L 35 344 Z';
 
 // ─── Layer geometry ───────────────────────────────────────────────────────────
 
-type Layer = Ingredient & { rectY: number; rectH: number };
+type Layer = DrinkIngredient & { rectY: number; rectH: number };
 
-function computeLayers(ingredients: Ingredient[]): Layer[] {
+function computeLayers(ingredients: DrinkIngredient[]): Layer[] {
 	let y = LIQ_BOTTOM;
-	// Fill from bottom upward → process ingredients in reverse (last = bottom)
 	return [...ingredients].reverse().map((ing) => {
 		const h = Math.round((ing.percent / 100) * LIQ_H);
 		const rectY = y - h;
@@ -71,7 +35,7 @@ function computeLayers(ingredients: Ingredient[]): Layer[] {
 
 type TooltipInfo = { name: string; percent: number; x: number; y: number };
 
-type CoffeeGlassProps = { ingredients: Ingredient[] };
+type CoffeeGlassProps = { ingredients: DrinkIngredient[] };
 
 function CoffeeGlass({ ingredients }: CoffeeGlassProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
@@ -80,16 +44,12 @@ function CoffeeGlass({ ingredients }: CoffeeGlassProps) {
 
 	const layers = computeLayers(ingredients);
 
-	// One handler on the <svg> element.
-	// Converts screen coords → SVG coordinate space, finds the hovered layer by Y.
-	// Positions the tooltip in CSS px relative to .glassContainer.
 	function handleSVGMouseMove(e: React.MouseEvent<SVGSVGElement>) {
 		const svg = e.currentTarget;
 		const container = containerRef.current;
 		if (!container) return;
 
 		const svgRect = svg.getBoundingClientRect();
-		// Y position in SVG user-unit space
 		const svgY = (e.clientY - svgRect.top) * (SVG_H / svgRect.height);
 
 		const hovered = layers.find((l) => svgY >= l.rectY && svgY < l.rectY + l.rectH) ?? null;
@@ -105,7 +65,6 @@ function CoffeeGlass({ ingredients }: CoffeeGlassProps) {
 		setTooltip({
 			name: hovered.name,
 			percent: hovered.percent,
-			// tooltip in CSS px relative to the container
 			x: e.clientX - containerRect.left,
 			y: e.clientY - containerRect.top,
 		});
@@ -130,7 +89,6 @@ function CoffeeGlass({ ingredients }: CoffeeGlassProps) {
 						<path d={GLASS_CLIP} />
 					</clipPath>
 
-					{/* Left-edge glass shine */}
 					<linearGradient id="glassShine" x1="0" y1="0" x2="1" y2="0">
 						<stop offset="0%" stopColor="white" stopOpacity="0.32" />
 						<stop offset="18%" stopColor="white" stopOpacity="0" />
@@ -138,15 +96,12 @@ function CoffeeGlass({ ingredients }: CoffeeGlassProps) {
 						<stop offset="100%" stopColor="white" stopOpacity="0.1" />
 					</linearGradient>
 
-					{/* Subtle inner shadow at top of liquid */}
 					<linearGradient id="topShadow" x1="0" y1="0" x2="0" y2="1">
 						<stop offset="0%" stopColor="rgba(0,0,0,0.18)" />
 						<stop offset="100%" stopColor="rgba(0,0,0,0)" />
 					</linearGradient>
 				</defs>
 
-				{/* All children inside <g> have no individual pointer events —
-				    the <svg> captures everything via onMouseMove above */}
 				<g clipPath="url(#glassClip)" style={{ pointerEvents: 'none' }}>
 					{layers.map((layer) => (
 						<rect
@@ -166,7 +121,6 @@ function CoffeeGlass({ ingredients }: CoffeeGlassProps) {
 						/>
 					))}
 
-					{/* Thin separator lines between layers */}
 					{layers.slice(1).map((layer) => (
 						<line
 							key={`sep-${layer.ingredient_id}`}
@@ -179,14 +133,10 @@ function CoffeeGlass({ ingredients }: CoffeeGlassProps) {
 						/>
 					))}
 
-					{/* Top liquid shadow */}
 					<rect x={0} y={LIQ_TOP} width={SVG_W} height={18} fill="url(#topShadow)" />
-
-					{/* Glass shine overlay */}
 					<rect x={0} y={LIQ_TOP} width={SVG_W} height={LIQ_H} fill="url(#glassShine)" />
 				</g>
 
-				{/* Glass outer border */}
 				<path
 					d={GLASS_OUTER}
 					fill="none"
@@ -196,7 +146,6 @@ function CoffeeGlass({ ingredients }: CoffeeGlassProps) {
 					style={{ pointerEvents: 'none' }}
 				/>
 
-				{/* Top rim */}
 				<rect
 					x={16}
 					y={12}
@@ -225,15 +174,12 @@ function CoffeeGlass({ ingredients }: CoffeeGlassProps) {
 
 // ─── Ingredient legend ────────────────────────────────────────────────────────
 
-function IngredientLegend({ ingredients }: { ingredients: Ingredient[] }) {
+function IngredientLegend({ ingredients }: { ingredients: DrinkIngredient[] }) {
 	return (
 		<ul className={s.legend}>
 			{ingredients.map((ing) => (
 				<li key={ing.ingredient_id} className={s.legendItem}>
-					<span
-						className={s.legendDot}
-						style={{ background: ing.color }}
-					/>
+					<span className={s.legendDot} style={{ background: ing.color }} />
 					<span className={s.legendName}>{ing.name}</span>
 					<span className={s.legendPercent}>{ing.percent}%</span>
 				</li>
@@ -245,21 +191,49 @@ function IngredientLegend({ ingredients }: { ingredients: Ingredient[] }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 const DrinkPage = () => {
-	const drink = MOCK_DRINK;
+	const { id } = useParams<{ id: string }>();
+	const [drink, setDrink] = useState<DrinkDetail | null>(null);
+	const [isFavorite, setIsFavorite] = useState(false);
+	const [rating, setRating] = useState(0);
 
-	const [isFavorite, setIsFavorite] = useState(drink.isInFavorites);
-	const [rating, setRating] = useState<number>(drink.user_rating ?? 0);
+	useEffect(() => {
+		if (!id) return;
+		drinkModule.getDrink(Number(id)).then((d) => {
+			setDrink(d);
+			setIsFavorite(d.isInFavorites);
+			setRating(d.userRating ?? 0);
+		});
+	}, [id]);
+
+	async function handleToggleFavorite() {
+		if (!drink) return;
+		const { isFavorite: newFavorite, rating: newRating } = await drinkModule.toggleFavorite(drink.drinkId);
+		setIsFavorite(newFavorite);
+		setRating(newRating);
+	}
+
+	async function handleRatingChange(value: number) {
+		if (!drink || !isFavorite) return;
+		setRating(value);
+		await drinkModule.updateRating(drink.drinkId, value);
+	}
+
+	if (!drink) {
+		return (
+			<div className={s.page}>
+				<Spin size="large" />
+			</div>
+		);
+	}
 
 	return (
 		<div className={s.page}>
 			<div className={s.layout}>
-				{/* Left: glass visualization */}
 				<div className={s.leftPanel}>
 					<CoffeeGlass ingredients={drink.ingredients} />
 					<IngredientLegend ingredients={drink.ingredients} />
 				</div>
 
-				{/* Right: drink info */}
 				<div className={s.rightPanel}>
 					<Tag color="brown" className={s.categoryTag}>
 						{drink.category.name}
@@ -276,13 +250,18 @@ const DrinkPage = () => {
 							<Rate
 								count={10}
 								value={rating}
-								onChange={setRating}
+								onChange={handleRatingChange}
 								allowHalf={false}
 								allowClear={true}
+								disabled={!isFavorite}
 								className={s.rate}
 							/>
 							<span className={s.ratingValue}>
-								{rating > 0 ? `${rating} / 10` : 'Не оценено'}
+								{!isFavorite
+									? 'Добавьте в избранное'
+									: rating > 0
+										? `${rating} / 10`
+										: 'Не оценено'}
 							</span>
 						</div>
 					</div>
@@ -291,7 +270,7 @@ const DrinkPage = () => {
 						type={isFavorite ? 'primary' : 'default'}
 						size="large"
 						icon={isFavorite ? <HeartFilled /> : <HeartOutlined />}
-						onClick={() => setIsFavorite((f) => !f)}
+						onClick={handleToggleFavorite}
 						className={s.favoriteBtn}
 					>
 						{isFavorite ? 'В избранном' : 'Добавить в избранное'}

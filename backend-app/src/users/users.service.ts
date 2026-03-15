@@ -22,6 +22,7 @@ export class UsersService {
     const profile = await this.profileRepo.findOne({
       where: { user_id: userId },
     });
+
     if (!profile) {
       throw new NotFoundException('User profile not found');
     }
@@ -68,7 +69,9 @@ export class UsersService {
       where: { user_id: userId },
     });
     if (profile) {
-      await this.socialLinkRepo.delete({ user_profile_id: Number(profile.user_profile_id) });
+      await this.socialLinkRepo.delete({
+        user_profile_id: Number(profile.user_profile_id),
+      });
       await this.profileRepo.remove(profile);
     }
   }
