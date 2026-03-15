@@ -14,11 +14,20 @@ const passwordRules = [
 	{ min: 6, message: 'Минимум 6 символов' },
 ];
 
-const LoginForm = () => {
+type FormProps = {
+	onSuccess: () => void;
+};
+
+function LoginForm({ onSuccess }: FormProps) {
 	const [form] = Form.useForm<LoginFormValues>();
 
+	async function handleFinish(values: LoginFormValues) {
+		await authModule.login(values);
+		onSuccess();
+	}
+
 	return (
-		<Form form={form} layout="vertical" onFinish={authModule.login} size="large">
+		<Form form={form} layout="vertical" onFinish={handleFinish} size="large">
 			<Form.Item label="Email" name="email" rules={emailRules}>
 				<Input placeholder="your@email.com" />
 			</Form.Item>
@@ -32,13 +41,18 @@ const LoginForm = () => {
 			</Form.Item>
 		</Form>
 	);
-};
+}
 
-const RegisterForm = () => {
+function RegisterForm({ onSuccess }: FormProps) {
 	const [form] = Form.useForm<RegisterFormValues>();
 
+	async function handleFinish(values: RegisterFormValues) {
+		await authModule.register(values);
+		onSuccess();
+	}
+
 	return (
-		<Form form={form} layout="vertical" onFinish={authModule.register} size="large">
+		<Form form={form} layout="vertical" onFinish={handleFinish} size="large">
 			<Form.Item
 				label="Имя пользователя"
 				name="user_name"
@@ -59,12 +73,7 @@ const RegisterForm = () => {
 			</Form.Item>
 		</Form>
 	);
-};
-
-const tabs = [
-	{ key: 'login', label: 'Вход', children: <LoginForm /> },
-	{ key: 'register', label: 'Регистрация', children: <RegisterForm /> },
-];
+}
 
 const AuthPage = () => {
 	const navigate = useNavigate();
@@ -74,6 +83,15 @@ const AuthPage = () => {
 			navigate('/profile', { replace: true });
 		}
 	}, []);
+
+	function handleSuccess() {
+		navigate('/profile', { replace: true });
+	}
+
+	const tabs = [
+		{ key: 'login', label: 'Вход', children: <LoginForm onSuccess={handleSuccess} /> },
+		{ key: 'register', label: 'Регистрация', children: <RegisterForm onSuccess={handleSuccess} /> },
+	];
 
 	return (
 		<div className={s.root}>
