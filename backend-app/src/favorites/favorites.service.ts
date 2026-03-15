@@ -16,7 +16,7 @@ export class FavoritesService {
 
   private ensureOwner(currentUserId: number, targetUserId: number) {
     if (currentUserId !== targetUserId) {
-      throw new ForbiddenException('Cannot access another user\'s favorites');
+      throw new ForbiddenException("Cannot access another user's favorites");
     }
   }
 

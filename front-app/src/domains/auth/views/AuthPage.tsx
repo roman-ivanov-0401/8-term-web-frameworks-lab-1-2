@@ -1,10 +1,7 @@
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button, Form, Input, Tabs } from 'antd';
-import {
-	handleLoginSubmit,
-	handleRegisterSubmit,
-	type LoginFormValues,
-	type RegisterFormValues,
-} from '../modules/AuthModule';
+import { authModule, type LoginFormValues, type RegisterFormValues } from '../modules/AuthModule';
 import s from './AuthPage.module.scss';
 
 const emailRules = [
@@ -21,7 +18,7 @@ const LoginForm = () => {
 	const [form] = Form.useForm<LoginFormValues>();
 
 	return (
-		<Form form={form} layout="vertical" onFinish={handleLoginSubmit} size="large">
+		<Form form={form} layout="vertical" onFinish={authModule.login} size="large">
 			<Form.Item label="Email" name="email" rules={emailRules}>
 				<Input placeholder="your@email.com" />
 			</Form.Item>
@@ -29,7 +26,7 @@ const LoginForm = () => {
 				<Input.Password placeholder="••••••" />
 			</Form.Item>
 			<Form.Item className={s.formLastItem}>
-				<Button type="primary" htmlType="submit" block>
+				<Button type="primary" htmlType="submit" block={true}>
 					Войти
 				</Button>
 			</Form.Item>
@@ -41,7 +38,14 @@ const RegisterForm = () => {
 	const [form] = Form.useForm<RegisterFormValues>();
 
 	return (
-		<Form form={form} layout="vertical" onFinish={handleRegisterSubmit} size="large">
+		<Form form={form} layout="vertical" onFinish={authModule.register} size="large">
+			<Form.Item
+				label="Имя пользователя"
+				name="user_name"
+				rules={[{ required: true, message: 'Введите имя пользователя' }]}
+			>
+				<Input placeholder="username" />
+			</Form.Item>
 			<Form.Item label="Email" name="email" rules={emailRules}>
 				<Input placeholder="your@email.com" />
 			</Form.Item>
@@ -49,7 +53,7 @@ const RegisterForm = () => {
 				<Input.Password placeholder="••••••" />
 			</Form.Item>
 			<Form.Item className={s.formLastItem}>
-				<Button type="primary" htmlType="submit" block>
+				<Button type="primary" htmlType="submit" block={true}>
 					Зарегистрироваться
 				</Button>
 			</Form.Item>
@@ -63,13 +67,21 @@ const tabs = [
 ];
 
 const AuthPage = () => {
+	const navigate = useNavigate();
+
+	useEffect(() => {
+		if (authModule.getToken()) {
+			navigate('/profile', { replace: true });
+		}
+	}, []);
+
 	return (
 		<div className={s.root}>
 			<div className={s.card}>
 				<div className={s.logo}>☕</div>
 				<h1 className={s.title}>CoffeeMatch</h1>
 				<p className={s.subtitle}>Найди своего кофейного близнеца</p>
-				<Tabs defaultActiveKey="login" items={tabs} centered />
+				<Tabs defaultActiveKey="login" items={tabs} centered={true} />
 			</div>
 		</div>
 	);
