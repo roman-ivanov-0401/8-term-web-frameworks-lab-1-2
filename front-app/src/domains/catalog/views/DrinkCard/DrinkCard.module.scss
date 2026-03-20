@@ -1,0 +1,66 @@
+@use '../../../../views/styles/variables' as *;
+
+.cardLink {
+	display: block;
+}
+
+.card {
+	background: $color-bg-card;
+	border-radius: $radius-card;
+	overflow: hidden;
+	box-shadow: $shadow-card;
+	transition: box-shadow 0.2s, transform 0.2s;
+	cursor: pointer;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+
+	&:hover {
+		box-shadow: 0 6px 24px rgba(111, 78, 55, 0.22);
+		transform: translateY(-2px);
+
+		.image {
+			transform: scale(1.04);
+		}
+	}
+}
+
+.imageWrapper {
+	width: 100%;
+	aspect-ratio: 4 / 3;
+	overflow: hidden;
+	background: $color-bg-image;
+}
+
+.image {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+	transition: transform 0.3s;
+}
+
+.cardBody {
+	padding: 14px 16px 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	flex: 1;
+}
+
+.drinkName {
+	font-size: 15px;
+	color: $color-primary-dark;
+	display: block;
+}
+
+.ratingLabel {
+	font-size: 12px;
+	color: $color-primary-mid;
+}
+
+.notRated {
+	font-size: 13px;
+	color: $color-primary-light;
+	font-style: italic;
+}

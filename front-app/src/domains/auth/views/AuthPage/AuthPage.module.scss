@@ -1,4 +1,4 @@
-@use '../../../views/styles/variables' as *;
+@use '../../../../views/styles/variables' as *;
 
 .root {
 	min-height: 100vh;
@@ -43,8 +43,4 @@
 	margin: 0 0 24px;
 	font-size: 14px;
 	color: $color-primary-mid;
-}
-
-.formLastItem {
-	margin-bottom: 0;
 }

@@ -30,10 +30,11 @@ export const profileModule = {
 	},
 
 	updateProfile: async (payload: UpdateProfilePayload): Promise<void> => {
-		await profileRepository.updateProfile(payload);
+		const { photo_path } = await profileRepository.updateProfile(payload);
 		useCurrentUserStore.getState().updateCurrentUser({
 			user_name: payload.user_name,
 			user_description: payload.user_description,
+			photo_path,
 		});
 		useProfileStore.getState().setEditOpen(false);
 	},
