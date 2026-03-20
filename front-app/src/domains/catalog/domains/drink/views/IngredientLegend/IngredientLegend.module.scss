@@ -1,0 +1,40 @@
+@use '../../../../../../views/styles/variables' as *;
+
+.legend {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	width: 100%;
+	max-width: 200px;
+}
+
+.legendItem {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.legendDot {
+	width: 14px;
+	height: 14px;
+	border-radius: 4px;
+	flex-shrink: 0;
+	outline: 1px solid rgba(111, 78, 55, 0.22);
+}
+
+.legendName {
+	font-size: 13px;
+	color: $color-primary-dark;
+	flex: 1;
+}
+
+.legendPercent {
+	font-size: 13px;
+	color: $color-primary-light;
+	font-weight: 600;
+	min-width: 36px;
+	text-align: right;
+}

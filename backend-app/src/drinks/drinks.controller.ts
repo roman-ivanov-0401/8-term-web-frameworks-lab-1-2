@@ -19,8 +19,11 @@ export class DrinksController {
   constructor(private readonly drinksService: DrinksService) {}
 
   @Get()
+  @Get(':drink_id')
+  @UseGuards(JwtAuthGuard)
   getList(@Query() dto: GetDrinksDto, @Req() req: Request) {
     const user = (req as any).user;
+
     return this.drinksService.getList(dto, user?.user_id);
   }
 
@@ -32,6 +35,7 @@ export class DrinksController {
     @Req() req: Request,
   ) {
     const user = (req as any).user;
+    console.log(user);
     return this.drinksService.getById(drinkId, user?.user_id);
   }
 }

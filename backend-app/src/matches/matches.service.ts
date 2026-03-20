@@ -101,11 +101,22 @@ export class MatchesService {
       profileMap.set(Number(p.user_id), p);
     }
 
+    const users: Array<{ user_id: string; user_name: string | null }> =
+      await this.favRepo.manager.query(
+        `SELECT user_id, user_name FROM users WHERE user_id = ANY($1)`,
+        [results.map((r) => r.user_id)],
+      );
+
+    const userNameMap = new Map<number, string | null>();
+    for (const u of users) {
+      userNameMap.set(Number(u.user_id), u.user_name);
+    }
+
     return results.map((r) => {
       const profile = profileMap.get(r.user_id);
       return {
         user_id: r.user_id,
-        user_name: '',
+        user_name: userNameMap.get(r.user_id) ?? null,
         photo_path: profile?.photo_path ?? null,
         user_description: profile?.user_description ?? '',
         match_score: r.match_score,

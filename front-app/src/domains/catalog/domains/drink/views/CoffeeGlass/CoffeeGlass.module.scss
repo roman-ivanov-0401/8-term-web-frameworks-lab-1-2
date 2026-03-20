@@ -1,0 +1,48 @@
+@use '../../../../../../views/styles/variables' as *;
+
+.glassContainer {
+	position: relative;
+	width: 100%;
+	max-width: 200px;
+}
+
+.glass {
+	width: 100%;
+	display: block;
+	filter: drop-shadow(0 12px 32px rgba(59, 42, 26, 0.2));
+}
+
+.glassLayer {
+	cursor: crosshair;
+	transition: filter 0.12s;
+
+	&:hover {
+		filter: brightness(1.18) saturate(1.1);
+	}
+}
+
+.tooltip {
+	position: absolute;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: 8px 12px;
+	background: $color-primary-dark;
+	color: #fff;
+	border-radius: 8px;
+	font-size: 13px;
+	pointer-events: none;
+	white-space: nowrap;
+	z-index: 20;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.tooltipName {
+	font-weight: 600;
+	font-size: 13px;
+}
+
+.tooltipPercent {
+	font-size: 12px;
+	opacity: 0.7;
+}
