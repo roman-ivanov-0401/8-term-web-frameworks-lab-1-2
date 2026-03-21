@@ -29,6 +29,7 @@ export type AuthUser = {
 
 export type AuthResponse = {
   token: string;
+  refresh_token: string;
   user: AuthUser;
 };
 
@@ -41,6 +42,10 @@ export type RegisterDto = {
 export type LoginDto = {
   email: string;
   password: string;
+};
+
+export type RefreshDto = {
+  refresh_token: string;
 };
 
 // ─── JWT Payload (что кладётся в токен) ─────────────────────────────────────
