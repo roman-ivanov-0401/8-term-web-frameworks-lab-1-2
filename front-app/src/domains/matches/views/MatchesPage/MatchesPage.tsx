@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { Button, Modal, Tag } from 'antd';
-import { matchesModule, type MatchItem } from '../modules/MatchesModule';
+import { Button } from 'antd';
+import { matchesModule, type MatchItem } from '../../modules/MatchesModule';
+import MatchModal from '../MatchModal/MatchModal';
 import s from './MatchesPage.module.scss';
 
 type SearchState = 'idle' | 'searching' | 'found';
@@ -21,49 +22,7 @@ function centerPos(targetIndex: number, itemCount: number): number {
 	return ((targetIndex - 1 + itemCount) % itemCount) * ITEM_HEIGHT;
 }
 
-type MatchModalProps = {
-	open: boolean;
-	match: MatchItem;
-	onClose: () => void;
-};
-
-function MatchModal({ open, match, onClose }: MatchModalProps) {
-	return (
-		<Modal open={open} onCancel={onClose} footer={null} centered={true} width={480}>
-			<div className={s.modal}>
-				<div className={s.modalHeader}>
-					<div className={s.modalAvatar}>{match.initials}</div>
-					<div className={s.modalMeta}>
-						<h3 className={s.modalName}>{match.userName}</h3>
-						<span className={s.modalScore}>Совпадение {match.score}%</span>
-					</div>
-				</div>
-
-				{match.description && (
-					<section className={s.modalSection}>
-						<h4 className={s.modalSectionTitle}>О себе</h4>
-						<p className={s.modalDescription}>{match.description}</p>
-					</section>
-				)}
-
-				{match.commonDrinks.length > 0 && (
-					<section className={s.modalSection}>
-						<h4 className={s.modalSectionTitle}>Общие напитки</h4>
-						<div className={s.modalTags}>
-							{match.commonDrinks.map((drink) => (
-								<Tag key={drink} color="brown">
-									{drink}
-								</Tag>
-							))}
-						</div>
-					</section>
-				)}
-			</div>
-		</Modal>
-	);
-}
-
-const MatchesPage = () => {
+function MatchesPage() {
 	const [state, setState] = useState<SearchState>('idle');
 	const [matches, setMatches] = useState<MatchItem[]>([]);
 	const [matchIndex, setMatchIndex] = useState(0);
@@ -217,6 +176,6 @@ const MatchesPage = () => {
 			)}
 		</div>
 	);
-};
+}
 
 export default MatchesPage;

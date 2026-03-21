@@ -1,11 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Button, Rate, Spin, Tag } from 'antd';
-import { HeartFilled, HeartOutlined } from '@ant-design/icons';
-import { drinkModule, type DrinkDetail, type DrinkIngredient } from '../modules/DrinkModule';
-import s from './DrinkPage.module.scss';
-
-// ─── Glass SVG constants ──────────────────────────────────────────────────────
+import { useRef, useState } from 'react';
+import { type DrinkIngredient } from '../../modules/DrinkModule';
+import s from './CoffeeGlass.module.scss';
 
 const SVG_W = 200;
 const SVG_H = 360;
@@ -16,8 +11,6 @@ const LIQ_H = LIQ_BOTTOM - LIQ_TOP;
 
 const GLASS_CLIP = 'M 30 30 L 170 30 L 156 334 L 44 334 Z';
 const GLASS_OUTER = 'M 20 18 L 180 18 L 165 344 L 35 344 Z';
-
-// ─── Layer geometry ───────────────────────────────────────────────────────────
 
 type Layer = DrinkIngredient & { rectY: number; rectH: number };
 
@@ -31,11 +24,11 @@ function computeLayers(ingredients: DrinkIngredient[]): Layer[] {
 	});
 }
 
-// ─── Coffee glass SVG component ───────────────────────────────────────────────
-
 type TooltipInfo = { name: string; percent: number; x: number; y: number };
 
-type CoffeeGlassProps = { ingredients: DrinkIngredient[] };
+type CoffeeGlassProps = {
+	ingredients: DrinkIngredient[];
+};
 
 function CoffeeGlass({ ingredients }: CoffeeGlassProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
@@ -172,113 +165,4 @@ function CoffeeGlass({ ingredients }: CoffeeGlassProps) {
 	);
 }
 
-// ─── Ingredient legend ────────────────────────────────────────────────────────
-
-function IngredientLegend({ ingredients }: { ingredients: DrinkIngredient[] }) {
-	return (
-		<ul className={s.legend}>
-			{ingredients.map((ing) => (
-				<li key={ing.ingredient_id} className={s.legendItem}>
-					<span className={s.legendDot} style={{ background: ing.color }} />
-					<span className={s.legendName}>{ing.name}</span>
-					<span className={s.legendPercent}>{ing.percent}%</span>
-				</li>
-			))}
-		</ul>
-	);
-}
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
-const DrinkPage = () => {
-	const { id } = useParams<{ id: string }>();
-	const [drink, setDrink] = useState<DrinkDetail | null>(null);
-	const [isFavorite, setIsFavorite] = useState(false);
-	const [rating, setRating] = useState(0);
-
-	useEffect(() => {
-		if (!id) return;
-		drinkModule.getDrink(Number(id)).then((d) => {
-			setDrink(d);
-			setIsFavorite(d.isInFavorites);
-			setRating(d.userRating ?? 0);
-		});
-	}, [id]);
-
-	async function handleToggleFavorite() {
-		if (!drink) return;
-		const { isFavorite: newFavorite, rating: newRating } = await drinkModule.toggleFavorite(drink.drinkId);
-		setIsFavorite(newFavorite);
-		setRating(newRating);
-	}
-
-	async function handleRatingChange(value: number) {
-		if (!drink || !isFavorite) return;
-		setRating(value);
-		await drinkModule.updateRating(drink.drinkId, value);
-	}
-
-	if (!drink) {
-		return (
-			<div className={s.page}>
-				<Spin size="large" />
-			</div>
-		);
-	}
-
-	return (
-		<div className={s.page}>
-			<div className={s.layout}>
-				<div className={s.leftPanel}>
-					<CoffeeGlass ingredients={drink.ingredients} />
-					<IngredientLegend ingredients={drink.ingredients} />
-				</div>
-
-				<div className={s.rightPanel}>
-					<Tag color="brown" className={s.categoryTag}>
-						{drink.category.name}
-					</Tag>
-
-					<h1 className={s.drinkName}>{drink.name}</h1>
-					<p className={s.description}>{drink.description}</p>
-
-					<div className={s.divider} />
-
-					<div className={s.ratingSection}>
-						<span className={s.ratingLabel}>Ваша оценка</span>
-						<div className={s.ratingRow}>
-							<Rate
-								count={10}
-								value={rating}
-								onChange={handleRatingChange}
-								allowHalf={false}
-								allowClear={true}
-								disabled={!isFavorite}
-								className={s.rate}
-							/>
-							<span className={s.ratingValue}>
-								{!isFavorite
-									? 'Добавьте в избранное'
-									: rating > 0
-										? `${rating} / 10`
-										: 'Не оценено'}
-							</span>
-						</div>
-					</div>
-
-					<Button
-						type={isFavorite ? 'primary' : 'default'}
-						size="large"
-						icon={isFavorite ? <HeartFilled /> : <HeartOutlined />}
-						onClick={handleToggleFavorite}
-						className={s.favoriteBtn}
-					>
-						{isFavorite ? 'В избранном' : 'Добавить в избранное'}
-					</Button>
-				</div>
-			</div>
-		</div>
-	);
-};
-
-export default DrinkPage;
+export default CoffeeGlass;

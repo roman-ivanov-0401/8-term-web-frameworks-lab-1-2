@@ -1,0 +1,119 @@
+@use '../../../../../../views/styles/variables' as *;
+
+.page {
+	min-height: 100vh;
+	background: $color-bg-app;
+}
+
+.layout {
+	display: flex;
+	min-height: 100vh;
+	max-width: 1200px;
+	margin: 0 auto;
+
+	@media (max-width: 768px) {
+		flex-direction: column;
+	}
+}
+
+.leftPanel {
+	width: 50%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 32px;
+	padding: 56px 48px;
+	border-right: 1px solid $color-border;
+
+	@media (max-width: 768px) {
+		width: 100%;
+		padding: 40px 32px;
+		border-right: none;
+		border-bottom: 1px solid $color-border;
+	}
+}
+
+.rightPanel {
+	width: 50%;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	padding: 56px 64px 56px 52px;
+
+	@media (max-width: 1024px) {
+		padding: 48px 40px;
+	}
+
+	@media (max-width: 768px) {
+		width: 100%;
+		padding: 40px 24px;
+	}
+}
+
+.categoryTag {
+	align-self: flex-start;
+	margin-bottom: 14px;
+}
+
+.drinkName {
+	font-size: 42px;
+	font-weight: 800;
+	color: $color-primary-dark;
+	margin: 0 0 18px;
+	line-height: 1.1;
+
+	@media (max-width: 480px) {
+		font-size: 30px;
+	}
+}
+
+.description {
+	font-size: 15px;
+	line-height: 1.8;
+	color: $color-primary-mid;
+	margin: 0;
+}
+
+.divider {
+	height: 1px;
+	background: $color-border;
+	margin: 36px 0;
+}
+
+.ratingSection {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	margin-bottom: 32px;
+}
+
+.ratingLabel {
+	font-size: 12px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.07em;
+	color: $color-primary-light;
+}
+
+.ratingRow {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	flex-wrap: wrap;
+}
+
+.rate {
+	font-size: 20px;
+}
+
+.ratingValue {
+	font-size: 15px;
+	color: $color-primary-mid;
+	font-weight: 500;
+	min-width: 90px;
+}
+
+.favoriteBtn {
+	align-self: flex-start;
+}

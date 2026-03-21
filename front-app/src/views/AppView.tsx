@@ -1,10 +1,10 @@
 import { type ReactNode, useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
-import AuthPage from '../domains/auth/views/AuthPage';
-import CatalogPage from '../domains/catalog/views/CatalogPage';
-import DrinkPage from '../domains/catalog/domains/drink/views/DrinkPage';
-import MatchesPage from '../domains/matches/views/MatchesPage';
-import ProfilePage from '../domains/profile/views/ProfilePage';
+import AuthPage from '../domains/auth/views/AuthPage/AuthPage';
+import CatalogPage from '../domains/catalog/views/CatalogPage/CatalogPage';
+import DrinkPage from '../domains/catalog/domains/drink/views/DrinkPage/DrinkPage';
+import MatchesPage from '../domains/matches/views/MatchesPage/MatchesPage';
+import ProfilePage from '../domains/profile/views/ProfilePage/ProfilePage';
 import AppNavbar from './AppNavbar';
 import { appModule } from '../modules/appModule';
 import { authModule } from '../domains/auth/modules/AuthModule';

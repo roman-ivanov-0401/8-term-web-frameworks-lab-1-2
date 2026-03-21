@@ -1,6 +1,4 @@
-@use '../../../views/styles/variables' as *;
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
+@use '../../../../views/styles/variables' as *;
 
 .page {
 	min-height: 100vh;
@@ -39,8 +37,6 @@
 	}
 }
 
-// ─── Avatar ───────────────────────────────────────────────────────────────────
-
 .avatarWrap {
 	margin-bottom: 4px;
 }
@@ -66,8 +62,6 @@
 	color: #fff;
 	letter-spacing: -1px;
 }
-
-// ─── Name & description ───────────────────────────────────────────────────────
 
 .userName {
 	font-size: 28px;
@@ -216,21 +210,4 @@
 	color: $color-primary-mid;
 	margin: 0 0 16px;
 	line-height: 1.6;
-}
-
-// ─── Drawer ───────────────────────────────────────────────────────────────────
-
-.drawerFooter {
-	display: flex;
-	justify-content: flex-end;
-	gap: 10px;
-}
-
-.uploadTrigger {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 6px;
-	font-size: 13px;
-	color: $color-primary-mid;
 }

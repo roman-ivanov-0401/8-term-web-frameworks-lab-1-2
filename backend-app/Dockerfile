@@ -1,14 +1,16 @@
 FROM node:22-alpine AS builder
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci
+# COPY package*.json ./
+COPY package.json ./
+RUN npm i
 COPY . .
 RUN npm run build
 
 FROM node:22-alpine
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci --omit=dev
+# COPY package*.json ./
+COPY package.json ./
+RUN npm i --omit=dev
 COPY --from=builder /app/dist ./dist
 RUN mkdir -p uploads
 EXPOSE 3050
