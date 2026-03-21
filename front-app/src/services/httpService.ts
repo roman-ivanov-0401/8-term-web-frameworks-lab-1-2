@@ -3,7 +3,8 @@ import { localStorageRepository } from '../repositories/localStorageRepository';
 import { errorService } from './errorService';
 
 const TOKEN_KEY = 'auth_token';
-const AUTH_SKIP_URLS = ['/auth/login', '/auth/register'];
+const REFRESH_TOKEN_KEY = 'refresh_token';
+const AUTH_SKIP_URLS = ['/auth/login', '/auth/register', '/auth/refresh'];
 
 export const axiosInstance = axios.create({
 	baseURL: '/api/v1',
@@ -29,10 +30,53 @@ axiosInstance.interceptors.request.use((config) => {
 	return config;
 });
 
+let refreshPromise: Promise<string> | null = null;
+
 axiosInstance.interceptors.response.use(
 	(response) => response,
-	(error: AxiosError) => {
+	async (error: AxiosError) => {
+		const originalRequest = error.config as any;
 		const status = error.response?.status;
+
+		if (
+			status === 401 &&
+			!originalRequest._retry &&
+			!AUTH_SKIP_URLS.some((skip) => (originalRequest.url ?? '').includes(skip))
+		) {
+			originalRequest._retry = true;
+
+			const refreshToken = localStorageRepository.get(REFRESH_TOKEN_KEY);
+			if (!refreshToken) {
+				localStorageRepository.remove(TOKEN_KEY);
+				localStorageRepository.remove(REFRESH_TOKEN_KEY);
+				return Promise.reject(error);
+			}
+
+			try {
+				if (!refreshPromise) {
+					refreshPromise = axiosInstance
+						.post<{ token: string; refresh_token: string }>('/auth/refresh', {
+							refresh_token: refreshToken,
+						})
+						.then((res) => {
+							localStorageRepository.set(TOKEN_KEY, res.data.token);
+							localStorageRepository.set(REFRESH_TOKEN_KEY, res.data.refresh_token);
+							return res.data.token;
+						})
+						.finally(() => {
+							refreshPromise = null;
+						});
+				}
+
+				const newToken = await refreshPromise;
+				originalRequest.headers.Authorization = `Bearer ${newToken}`;
+				return axiosInstance(originalRequest);
+			} catch {
+				localStorageRepository.remove(TOKEN_KEY);
+				localStorageRepository.remove(REFRESH_TOKEN_KEY);
+				return Promise.reject(error);
+			}
+		}
 
 		if (status && status >= 400) {
 			errorService.handleAxiosError(error);

@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
+import { type ReactNode, useEffect } from 'react';
+import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import AuthPage from '../domains/auth/views/AuthPage';
 import CatalogPage from '../domains/catalog/views/CatalogPage';
 import DrinkPage from '../domains/catalog/domains/drink/views/DrinkPage';
@@ -7,6 +7,7 @@ import MatchesPage from '../domains/matches/views/MatchesPage';
 import ProfilePage from '../domains/profile/views/ProfilePage';
 import AppNavbar from './AppNavbar';
 import { appModule } from '../modules/appModule';
+import { authModule } from '../domains/auth/modules/AuthModule';
 
 function AppNavigator() {
 	const navigate = useNavigate();
@@ -17,6 +18,13 @@ function AppNavigator() {
 	}, []);
 
 	return null;
+}
+
+function RequireAuth({ children }: { children: ReactNode }) {
+	if (!authModule.getToken()) {
+		return <Navigate to="/auth" replace />;
+	}
+	return <>{children}</>;
 }
 
 const AppView = () => {
@@ -31,19 +39,19 @@ const AppView = () => {
 				/>
 				<Route
 					path="/matches"
-					element={<MatchesPage />}
+					element={<RequireAuth><MatchesPage /></RequireAuth>}
 				/>
 				<Route
 					path="/catalog"
-					element={<CatalogPage />}
+					element={<RequireAuth><CatalogPage /></RequireAuth>}
 				/>
 				<Route
 					path="/catalog/:id"
-					element={<DrinkPage />}
+					element={<RequireAuth><DrinkPage /></RequireAuth>}
 				/>
 				<Route
 					path="/profile"
-					element={<ProfilePage />}
+					element={<RequireAuth><ProfilePage /></RequireAuth>}
 				/>
 			</Routes>
 		</BrowserRouter>
