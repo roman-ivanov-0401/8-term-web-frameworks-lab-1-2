@@ -1,4 +1,5 @@
 import { matchesRepository } from '../repositories/matchesRepository';
+import { matchesStore } from '../models/matchesModel';
 
 export type MatchItem = {
 	userId: number;
@@ -19,15 +20,15 @@ function getInitials(name: string): string {
 }
 
 export const matchesModule = {
-	getMatches: async (): Promise<MatchItem[]> => {
+	getMatches: async (): Promise<void> => {
 		const matches = await matchesRepository.getMatches();
-		return matches.map((m) => ({
+		matchesStore.setMatches(matches.map((m) => ({
 			userId: m.user_id,
 			userName: m.user_name,
 			initials: getInitials(m.user_name),
 			score: m.match_score,
 			description: m.user_description,
 			commonDrinks: m.common_drinks.map((d) => d.name),
-		}));
+		})));
 	},
 };

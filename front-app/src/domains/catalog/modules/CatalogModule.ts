@@ -1,4 +1,5 @@
 import { catalogRepository } from '../repositories/catalogRepository';
+import { catalogStore } from '../models/catalogModel';
 
 export type DrinkListItem = {
 	drinkId: number;
@@ -27,30 +28,35 @@ export type DrinksFilter = {
 };
 
 export const catalogModule = {
-	getDrinks: async (filter?: DrinksFilter): Promise<DrinkListItem[]> => {
-		const result = await catalogRepository.getDrinks({
-			search: filter?.search,
-			category_ids: filter?.categoryIds,
-			ingredients: filter?.ingredientIds,
-			page: filter?.page,
-		});
-		return result.items.map((d) => ({
-			drinkId: d.drink_id,
-			name: d.name,
-			image: d.image,
-			score: d.score,
-			isInFavorites: d.isInFavorites,
-			categoryId: d.category.category_id,
-		}));
+	getDrinks: async (filter?: DrinksFilter): Promise<void> => {
+		catalogStore.setLoading(true);
+		try {
+			const result = await catalogRepository.getDrinks({
+				search: filter?.search,
+				category_ids: filter?.categoryIds,
+				ingredients: filter?.ingredientIds,
+				page: filter?.page,
+			});
+			catalogStore.setDrinks(result.items.map((d) => ({
+				drinkId: d.drink_id,
+				name: d.name,
+				image: d.image,
+				score: d.score,
+				isInFavorites: d.isInFavorites,
+				categoryId: d.category.category_id,
+			})));
+		} finally {
+			catalogStore.setLoading(false);
+		}
 	},
 
-	getCategories: async (): Promise<Category[]> => {
+	getCategories: async (): Promise<void> => {
 		const categories = await catalogRepository.getCategories();
-		return categories.map((c) => ({ categoryId: c.category_id, name: c.name }));
+		catalogStore.setCategories(categories.map((c) => ({ categoryId: c.category_id, name: c.name })));
 	},
 
-	getIngredients: async (search?: string): Promise<IngredientOption[]> => {
+	getIngredients: async (search?: string): Promise<void> => {
 		const ingredients = await catalogRepository.getIngredients(search);
-		return ingredients.map((i) => ({ ingredientId: i.ingredient_id, name: i.name }));
+		catalogStore.setIngredientOptions(ingredients.map((i) => ({ ingredientId: i.ingredient_id, name: i.name })));
 	},
 };

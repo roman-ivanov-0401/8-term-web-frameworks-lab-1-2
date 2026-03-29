@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { Button, Drawer, Form, Input, Upload } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { profileModule, type UpdateProfilePayload, type UserProfile } from '../../modules/ProfileModule';
-import { useProfileStore } from '../../models/profileModel';
+import { observer } from 'mobx-react-lite';
+import { profileStore } from '../../models/profileModel';
 import s from './EditProfileDrawer.module.scss';
 
 type EditFormValues = {
@@ -15,8 +16,8 @@ type EditProfileDrawerProps = {
 	profile: UserProfile;
 };
 
-function EditProfileDrawer({ open, profile }: EditProfileDrawerProps) {
-	const fileList = useProfileStore((state) => state.fileList);
+const EditProfileDrawer = observer(function EditProfileDrawer({ open, profile }: EditProfileDrawerProps) {
+	const fileList = profileStore.fileList;
 	const [form] = Form.useForm<EditFormValues>();
 
 	useEffect(() => {
@@ -102,6 +103,6 @@ function EditProfileDrawer({ open, profile }: EditProfileDrawerProps) {
 			</Form>
 		</Drawer>
 	);
-}
+});
 
 export default EditProfileDrawer;

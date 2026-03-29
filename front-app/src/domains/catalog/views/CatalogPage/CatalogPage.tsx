@@ -1,37 +1,29 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { observer } from 'mobx-react-lite';
 import { Col, Empty, Input, Row, Select, Spin } from 'antd';
 import { CloseOutlined } from '@ant-design/icons';
-import { catalogModule, type Category, type DrinkListItem, type IngredientOption } from '../../modules/CatalogModule';
+import { catalogModule } from '../../modules/CatalogModule';
+import { catalogStore } from '../../models/catalogModel';
 import CategoriesSidebar from '../CategoriesSidebar/CategoriesSidebar';
 import DrinkCard from '../DrinkCard/DrinkCard';
 import s from './CatalogPage.module.scss';
 
 const { Search } = Input;
 
-function CatalogPage() {
-	const [drinks, setDrinks] = useState<DrinkListItem[]>([]);
-	const [categories, setCategories] = useState<Category[]>([]);
-	const [ingredientOptions, setIngredientOptions] = useState<IngredientOption[]>([]);
-	const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-	const [selectedIngredients, setSelectedIngredients] = useState<number[]>([]);
-	const [search, setSearch] = useState('');
-	const [loading, setLoading] = useState(false);
+const CatalogPage = observer(function CatalogPage() {
+	const { drinks, categories, ingredientOptions, selectedCategory, selectedIngredients, search, loading } = catalogStore;
 
 	useEffect(() => {
-		catalogModule.getCategories().then(setCategories);
-		catalogModule.getIngredients().then(setIngredientOptions);
+		catalogModule.getCategories();
+		catalogModule.getIngredients();
 	}, []);
 
 	useEffect(() => {
-		setLoading(true);
-		catalogModule
-			.getDrinks({
-				search: search || undefined,
-				categoryIds: selectedCategory !== null ? [selectedCategory] : undefined,
-				ingredientIds: selectedIngredients.length > 0 ? selectedIngredients : undefined,
-			})
-			.then(setDrinks)
-			.finally(() => setLoading(false));
+		catalogModule.getDrinks({
+			search: search || undefined,
+			categoryIds: selectedCategory !== null ? [selectedCategory] : undefined,
+			ingredientIds: selectedIngredients.length > 0 ? selectedIngredients : undefined,
+		});
 	}, [search, selectedCategory, selectedIngredients]);
 
 	const selectOptions = ingredientOptions.map((i) => ({ label: i.name, value: i.ingredientId }));
@@ -42,7 +34,7 @@ function CatalogPage() {
 				<CategoriesSidebar
 					categories={categories}
 					selected={selectedCategory}
-					onSelect={setSelectedCategory}
+					onSelect={(id) => catalogStore.setSelectedCategory(id)}
 				/>
 
 				<main className={s.main}>
@@ -54,7 +46,7 @@ function CatalogPage() {
 								allowClear={true}
 								size="large"
 								className={s.search}
-								onSearch={setSearch}
+								onSearch={(value) => catalogStore.setSearch(value)}
 							/>
 							<Select
 								mode="multiple"
@@ -64,7 +56,7 @@ function CatalogPage() {
 								options={selectOptions}
 								size="large"
 								className={s.select}
-								onChange={setSelectedIngredients}
+								onChange={(ids) => catalogStore.setSelectedIngredients(ids)}
 								maxTagCount="responsive"
 							/>
 						</div>
@@ -91,13 +83,13 @@ function CatalogPage() {
 			</div>
 
 			{selectedCategory !== null && (
-				<button className={s.clearBtn} onClick={() => setSelectedCategory(null)}>
+				<button className={s.clearBtn} onClick={() => catalogStore.setSelectedCategory(null)}>
 					<CloseOutlined />
 					Отменить выбор
 				</button>
 			)}
 		</div>
 	);
-}
+});
 
 export default CatalogPage;

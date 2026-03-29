@@ -1,20 +1,31 @@
-import { create } from 'zustand';
+import { makeAutoObservable } from 'mobx';
 import type { UploadFile } from 'antd';
 
-type ProfileStore = {
-	editOpen: boolean;
-	newLinkValue: string;
-	fileList: UploadFile[];
-	setEditOpen: (open: boolean) => void;
-	setNewLinkValue: (value: string) => void;
-	setFileList: (fileList: UploadFile[]) => void;
-};
+class ProfileStore {
+	editOpen: boolean = false;
+	newLinkValue: string = '';
+	fileList: UploadFile[] = [];
+	avatarError: boolean = false;
 
-export const useProfileStore = create<ProfileStore>((set) => ({
-	editOpen: false,
-	newLinkValue: '',
-	fileList: [],
-	setEditOpen: (open) => set({ editOpen: open }),
-	setNewLinkValue: (value) => set({ newLinkValue: value }),
-	setFileList: (fileList) => set({ fileList }),
-}));
+	constructor() {
+		makeAutoObservable(this);
+	}
+
+	setEditOpen(open: boolean) {
+		this.editOpen = open;
+	}
+
+	setNewLinkValue(value: string) {
+		this.newLinkValue = value;
+	}
+
+	setFileList(fileList: UploadFile[]) {
+		this.fileList = fileList;
+	}
+
+	setAvatarError(value: boolean) {
+		this.avatarError = value;
+	}
+}
+
+export const profileStore = new ProfileStore();

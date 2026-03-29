@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { observer } from 'mobx-react-lite';
 import { Button, Input, Popconfirm, Spin } from 'antd';
 import { DeleteOutlined, EditOutlined, LinkOutlined, PlusOutlined } from '@ant-design/icons';
 import { profileModule, type AddSocialLinkPayload } from '../../modules/ProfileModule';
-import { useCurrentUserStore } from '../../../../models/currentUserModel';
-import { useProfileStore } from '../../models/profileModel';
+import { currentUserStore } from '../../../../models/currentUserModel';
+import { profileStore } from '../../models/profileModel';
 import EditProfileDrawer from '../EditProfileDrawer/EditProfileDrawer';
 import s from './ProfilePage.module.scss';
 
@@ -24,18 +25,18 @@ function linkLabel(url: string): string {
 	}
 }
 
-function ProfilePage() {
-	const profile = useCurrentUserStore((state) => state.currentUser);
-	const editOpen = useProfileStore((state) => state.editOpen);
-	const newLinkValue = useProfileStore((state) => state.newLinkValue);
-	const [avatarError, setAvatarError] = useState(false);
+const ProfilePage = observer(function ProfilePage() {
+	const profile = currentUserStore.currentUser;
+	const editOpen = profileStore.editOpen;
+	const newLinkValue = profileStore.newLinkValue;
+	const avatarError = profileStore.avatarError;
 
 	useEffect(() => {
 		profileModule.getMyProfile();
 	}, []);
 
 	useEffect(() => {
-		setAvatarError(false);
+		profileStore.setAvatarError(false);
 	}, [profile?.photo_path]);
 
 	async function handleAddLink() {
@@ -76,7 +77,7 @@ function ProfilePage() {
 								src={profile.photo_path}
 								alt={profile.user_name}
 								className={s.avatarImg}
-								onError={() => setAvatarError(true)}
+								onError={() => profileStore.setAvatarError(true)}
 							/>
 						) : (
 							<div className={s.avatarPlaceholder}>{initials}</div>
@@ -177,6 +178,6 @@ function ProfilePage() {
 			<EditProfileDrawer open={editOpen} profile={profile} />
 		</div>
 	);
-}
+});
 
 export default ProfilePage;

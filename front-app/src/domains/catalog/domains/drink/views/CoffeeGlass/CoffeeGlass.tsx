@@ -1,5 +1,7 @@
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
+import { observer } from 'mobx-react-lite';
 import { type DrinkIngredient } from '../../modules/DrinkModule';
+import { drinkStore } from '../../models/drinkModel';
 import s from './CoffeeGlass.module.scss';
 
 const SVG_W = 200;
@@ -24,16 +26,13 @@ function computeLayers(ingredients: DrinkIngredient[]): Layer[] {
 	});
 }
 
-type TooltipInfo = { name: string; percent: number; x: number; y: number };
-
 type CoffeeGlassProps = {
 	ingredients: DrinkIngredient[];
 };
 
-function CoffeeGlass({ ingredients }: CoffeeGlassProps) {
+const CoffeeGlass = observer(function CoffeeGlass({ ingredients }: CoffeeGlassProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
-	const [tooltip, setTooltip] = useState<TooltipInfo | null>(null);
-	const [hoveredId, setHoveredId] = useState<number | null>(null);
+	const { tooltip, hoveredIngredientId } = drinkStore;
 
 	const layers = computeLayers(ingredients);
 
@@ -48,14 +47,14 @@ function CoffeeGlass({ ingredients }: CoffeeGlassProps) {
 		const hovered = layers.find((l) => svgY >= l.rectY && svgY < l.rectY + l.rectH) ?? null;
 
 		if (!hovered) {
-			setTooltip(null);
-			setHoveredId(null);
+			drinkStore.setTooltip(null);
+			drinkStore.setHoveredIngredientId(null);
 			return;
 		}
 
 		const containerRect = container.getBoundingClientRect();
-		setHoveredId(hovered.ingredient_id);
-		setTooltip({
+		drinkStore.setHoveredIngredientId(hovered.ingredient_id);
+		drinkStore.setTooltip({
 			name: hovered.name,
 			percent: hovered.percent,
 			x: e.clientX - containerRect.left,
@@ -64,8 +63,8 @@ function CoffeeGlass({ ingredients }: CoffeeGlassProps) {
 	}
 
 	function handleSVGMouseLeave() {
-		setTooltip(null);
-		setHoveredId(null);
+		drinkStore.setTooltip(null);
+		drinkStore.setHoveredIngredientId(null);
 	}
 
 	return (
@@ -106,7 +105,7 @@ function CoffeeGlass({ ingredients }: CoffeeGlassProps) {
 							fill={layer.color}
 							style={{
 								filter:
-									hoveredId === layer.ingredient_id
+									hoveredIngredientId === layer.ingredient_id
 										? 'brightness(1.2) saturate(1.1)'
 										: undefined,
 								transition: 'filter 0.12s',
@@ -163,6 +162,6 @@ function CoffeeGlass({ ingredients }: CoffeeGlassProps) {
 			)}
 		</div>
 	);
-}
+});
 
 export default CoffeeGlass;

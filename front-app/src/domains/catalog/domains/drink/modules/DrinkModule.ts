@@ -1,5 +1,6 @@
 import { authModule } from '../../../../auth/modules/AuthModule';
 import { catalogRepository } from '../../../repositories/catalogRepository';
+import { drinkStore } from '../models/drinkModel';
 
 export type DrinkIngredient = {
 	ingredient_id: number;
@@ -20,9 +21,9 @@ export type DrinkDetail = {
 };
 
 export const drinkModule = {
-	getDrink: async (drinkId: number): Promise<DrinkDetail> => {
+	getDrink: async (drinkId: number): Promise<void> => {
 		const d = await catalogRepository.getDrink(drinkId);
-		return {
+		const drink: DrinkDetail = {
 			drinkId: d.drink_id,
 			name: d.name,
 			description: d.description,
@@ -31,15 +32,19 @@ export const drinkModule = {
 			userRating: d.user_rating,
 			isInFavorites: d.user_rating !== null,
 		};
+		drinkStore.setDrink(drink);
+		drinkStore.setIsFavorite(drink.isInFavorites);
+		drinkStore.setRating(drink.userRating ?? 0);
 	},
 
-	toggleFavorite: async (drinkId: number): Promise<{ isFavorite: boolean; rating: number }> => {
+	toggleFavorite: async (drinkId: number): Promise<void> => {
 		const me = await authModule.me();
 		const { added } = await catalogRepository.toggleFavorite(me.user_id, drinkId);
 		if (added) {
 			await catalogRepository.updateDrinkRating(me.user_id, drinkId, 0);
 		}
-		return { isFavorite: added, rating: 0 };
+		drinkStore.setIsFavorite(added);
+		drinkStore.setRating(0);
 	},
 
 	updateRating: async (drinkId: number, rating: number): Promise<void> => {

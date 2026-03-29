@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { makeAutoObservable } from 'mobx';
 
 export type CurrentUserSocialLink = {
 	social_link_id: number;
@@ -17,40 +17,36 @@ export type CurrentUser = {
 	social_links: CurrentUserSocialLink[];
 };
 
-type CurrentUserStore = {
-	currentUser: CurrentUser | null;
-	setCurrentUser: (user: CurrentUser | null) => void;
-	updateCurrentUser: (updates: Partial<CurrentUser>) => void;
-	addSocialLink: (link: CurrentUserSocialLink) => void;
-	removeSocialLink: (socialLinkId: number) => void;
-};
+class CurrentUserStore {
+	currentUser: CurrentUser | null = null;
 
-export const useCurrentUserStore = create<CurrentUserStore>((set) => ({
-	currentUser: null,
+	constructor() {
+		makeAutoObservable(this);
+	}
 
-	setCurrentUser: (user) => set({ currentUser: user }),
+	setCurrentUser(user: CurrentUser | null) {
+		this.currentUser = user;
+	}
 
-	updateCurrentUser: (updates) =>
-		set((state) => ({
-			currentUser: state.currentUser ? { ...state.currentUser, ...updates } : null,
-		})),
+	updateCurrentUser(updates: Partial<CurrentUser>) {
+		if (this.currentUser) {
+			this.currentUser = { ...this.currentUser, ...updates };
+		}
+	}
 
-	addSocialLink: (link) =>
-		set((state) => ({
-			currentUser: state.currentUser
-				? { ...state.currentUser, social_links: [...state.currentUser.social_links, link] }
-				: null,
-		})),
+	addSocialLink(link: CurrentUserSocialLink) {
+		if (this.currentUser) {
+			this.currentUser.social_links = [...this.currentUser.social_links, link];
+		}
+	}
 
-	removeSocialLink: (socialLinkId) =>
-		set((state) => ({
-			currentUser: state.currentUser
-				? {
-						...state.currentUser,
-						social_links: state.currentUser.social_links.filter(
-							(l) => l.social_link_id !== socialLinkId,
-						),
-					}
-				: null,
-		})),
-}));
+	removeSocialLink(socialLinkId: number) {
+		if (this.currentUser) {
+			this.currentUser.social_links = this.currentUser.social_links.filter(
+				(l) => l.social_link_id !== socialLinkId,
+			);
+		}
+	}
+}
+
+export const currentUserStore = new CurrentUserStore();

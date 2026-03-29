@@ -1,37 +1,31 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { observer } from 'mobx-react-lite';
 import { useParams } from 'react-router-dom';
 import { Button, Rate, Spin, Tag } from 'antd';
 import { HeartFilled, HeartOutlined } from '@ant-design/icons';
-import { drinkModule, type DrinkDetail } from '../../modules/DrinkModule';
+import { drinkModule } from '../../modules/DrinkModule';
+import { drinkStore } from '../../models/drinkModel';
 import CoffeeGlass from '../CoffeeGlass/CoffeeGlass';
 import IngredientLegend from '../IngredientLegend/IngredientLegend';
 import s from './DrinkPage.module.scss';
 
-function DrinkPage() {
+const DrinkPage = observer(function DrinkPage() {
 	const { id } = useParams<{ id: string }>();
-	const [drink, setDrink] = useState<DrinkDetail | null>(null);
-	const [isFavorite, setIsFavorite] = useState(false);
-	const [rating, setRating] = useState(0);
+	const { drink, isFavorite, rating } = drinkStore;
 
 	useEffect(() => {
 		if (!id) return;
-		drinkModule.getDrink(Number(id)).then((d) => {
-			setDrink(d);
-			setIsFavorite(d.isInFavorites);
-			setRating(d.userRating ?? 0);
-		});
+		drinkModule.getDrink(Number(id));
 	}, [id]);
 
 	async function handleToggleFavorite() {
 		if (!drink) return;
-		const { isFavorite: newFavorite, rating: newRating } = await drinkModule.toggleFavorite(drink.drinkId);
-		setIsFavorite(newFavorite);
-		setRating(newRating);
+		await drinkModule.toggleFavorite(drink.drinkId);
 	}
 
 	async function handleRatingChange(value: number) {
 		if (!drink || !isFavorite) return;
-		setRating(value);
+		drinkStore.setRating(value);
 		await drinkModule.updateRating(drink.drinkId, value);
 	}
 
@@ -96,6 +90,6 @@ function DrinkPage() {
 			</div>
 		</div>
 	);
-}
+});
 
 export default DrinkPage;

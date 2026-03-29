@@ -91,7 +91,7 @@ axiosInstance.interceptors.response.use(
 		}
 
 		if (status && status >= 400) {
-			errorService.handleAxiosError(error);
+			errorService.handleAxiosError(error as unknown as any);
 		}
 
 		return Promise.reject(error);

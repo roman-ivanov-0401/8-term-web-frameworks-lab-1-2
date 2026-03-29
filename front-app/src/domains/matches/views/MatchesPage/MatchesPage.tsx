@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
+import { observer } from 'mobx-react-lite';
 import { Button } from 'antd';
-import { matchesModule, type MatchItem } from '../../modules/MatchesModule';
+import { matchesModule } from '../../modules/MatchesModule';
+import { matchesStore } from '../../models/matchesModel';
 import MatchModal from '../MatchModal/MatchModal';
 import s from './MatchesPage.module.scss';
-
-type SearchState = 'idle' | 'searching' | 'found';
 
 const ITEM_HEIGHT = 80;
 const MAX_VEL = 14;
@@ -22,11 +22,8 @@ function centerPos(targetIndex: number, itemCount: number): number {
 	return ((targetIndex - 1 + itemCount) % itemCount) * ITEM_HEIGHT;
 }
 
-function MatchesPage() {
-	const [state, setState] = useState<SearchState>('idle');
-	const [matches, setMatches] = useState<MatchItem[]>([]);
-	const [matchIndex, setMatchIndex] = useState(0);
-	const [modalOpen, setModalOpen] = useState(false);
+const MatchesPage = observer(function MatchesPage() {
+	const { searchState, matches, matchIndex, modalOpen } = matchesStore;
 
 	const drumRef = useRef<HTMLDivElement>(null);
 	const rafRef = useRef<number>(0);
@@ -34,7 +31,7 @@ function MatchesPage() {
 	const velRef = useRef(0);
 
 	useEffect(() => {
-		matchesModule.getMatches().then(setMatches);
+		matchesModule.getMatches();
 		return () => cancelAnimationFrame(rafRef.current);
 	}, []);
 
@@ -96,14 +93,14 @@ function MatchesPage() {
 	}
 
 	function handleSearch() {
-		setState('searching');
+		matchesStore.setSearchState('searching');
 		startSpinning();
 
 		setTimeout(() => {
 			const idx = Math.floor(Math.random() * itemCount);
 			stopAt(idx, () => {
-				setMatchIndex(idx);
-				setState('found');
+				matchesStore.setMatchIndex(idx);
+				matchesStore.setSearchState('found');
 			});
 		}, 2500);
 	}
@@ -111,7 +108,7 @@ function MatchesPage() {
 	function handleReset() {
 		cancelAnimationFrame(rafRef.current);
 		velRef.current = 0;
-		setState('idle');
+		matchesStore.setSearchState('idle');
 	}
 
 	const match = matches[matchIndex];
@@ -122,14 +119,14 @@ function MatchesPage() {
 				<h2 className={s.heading}>Подбор метча</h2>
 
 				<div className={s.roulette}>
-					{state === 'idle' && (
+					{searchState === 'idle' && (
 						<div className={s.idleContent}>
 							<span className={s.idleIcon}>☕</span>
 							<span className={s.idleHint}>Найдите своего кофейного близнеца</span>
 						</div>
 					)}
 
-					{state === 'searching' && (
+					{searchState === 'searching' && (
 						<>
 							<div ref={drumRef} className={s.drum}>
 								{drumItems.map((item, i) => (
@@ -145,8 +142,8 @@ function MatchesPage() {
 						</>
 					)}
 
-					{state === 'found' && match && (
-						<button className={s.result} onClick={() => setModalOpen(true)}>
+					{searchState === 'found' && match && (
+						<button className={s.result} onClick={() => matchesStore.setModalOpen(true)}>
 							<div className={s.resultAvatar}>{match.initials}</div>
 							<p className={s.resultName}>{match.userName}</p>
 							<p className={s.resultScore}>Совпадение {match.score}%</p>
@@ -158,12 +155,12 @@ function MatchesPage() {
 				<Button
 					type="primary"
 					size="large"
-					loading={state === 'searching'}
+					loading={searchState === 'searching'}
 					disabled={matches.length === 0}
-					onClick={state === 'found' ? handleReset : handleSearch}
+					onClick={searchState === 'found' ? handleReset : handleSearch}
 					className={s.button}
 				>
-					{state === 'found' ? 'Найти ещё' : 'Найти метч'}
+					{searchState === 'found' ? 'Найти ещё' : 'Найти метч'}
 				</Button>
 			</div>
 
@@ -171,11 +168,11 @@ function MatchesPage() {
 				<MatchModal
 					open={modalOpen}
 					match={match}
-					onClose={() => setModalOpen(false)}
+					onClose={() => matchesStore.setModalOpen(false)}
 				/>
 			)}
 		</div>
 	);
-}
+});
 
 export default MatchesPage;
