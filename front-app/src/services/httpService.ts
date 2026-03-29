@@ -30,7 +30,28 @@ axiosInstance.interceptors.request.use((config) => {
 	return config;
 });
 
+const MAX_REFRESH_RETRIES = 3;
+
 let refreshPromise: Promise<string> | null = null;
+
+async function fetchNewToken(refreshToken: string): Promise<string> {
+	let lastError: unknown;
+
+	for (let attempt = 0; attempt < MAX_REFRESH_RETRIES; attempt++) {
+		try {
+			const { data } = await axiosInstance.post<{ token: string; refresh_token: string }>('/auth/refresh', {
+				refresh_token: refreshToken,
+			});
+			localStorageRepository.set(TOKEN_KEY, data.token);
+			localStorageRepository.set(REFRESH_TOKEN_KEY, data.refresh_token);
+			return data.token;
+		} catch (e) {
+			lastError = e;
+		}
+	}
+
+	throw lastError;
+}
 
 axiosInstance.interceptors.response.use(
 	(response) => response,
@@ -54,18 +75,9 @@ axiosInstance.interceptors.response.use(
 
 			try {
 				if (!refreshPromise) {
-					refreshPromise = axiosInstance
-						.post<{ token: string; refresh_token: string }>('/auth/refresh', {
-							refresh_token: refreshToken,
-						})
-						.then((res) => {
-							localStorageRepository.set(TOKEN_KEY, res.data.token);
-							localStorageRepository.set(REFRESH_TOKEN_KEY, res.data.refresh_token);
-							return res.data.token;
-						})
-						.finally(() => {
-							refreshPromise = null;
-						});
+					refreshPromise = fetchNewToken(refreshToken).finally(() => {
+						refreshPromise = null;
+					});
 				}
 
 				const newToken = await refreshPromise;
