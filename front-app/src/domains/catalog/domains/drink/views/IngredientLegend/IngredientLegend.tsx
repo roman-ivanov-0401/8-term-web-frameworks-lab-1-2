@@ -1,4 +1,4 @@
-import { type DrinkIngredient } from '../../modules/DrinkModule';
+import { type DrinkIngredient } from '../../../../repositories/catalogRepository';
 import s from './IngredientLegend.module.scss';
 
 type IngredientLegendProps = {

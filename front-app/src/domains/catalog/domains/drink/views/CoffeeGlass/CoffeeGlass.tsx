@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { type DrinkIngredient } from '../../modules/DrinkModule';
+import { type DrinkIngredient } from '../../../../repositories/catalogRepository';
 import s from './CoffeeGlass.module.scss';
 
 const SVG_W = 200;

@@ -1,10 +1,9 @@
 import { notification } from 'antd';
-import { AxiosError } from 'axios';
 
-type ApiError = {
-	error: {
-		code: string;
-		message: string;
+type ApiErrorData = {
+	error?: {
+		code?: string;
+		message?: string;
 	};
 };
 
@@ -18,12 +17,11 @@ const ERROR_MESSAGES: Record<number, string> = {
 };
 
 export const errorService = {
-	handleAxiosError: (error: AxiosError<ApiError>): void => {
-		const status = error.response?.status;
+	handleError: (status: number, data?: unknown): void => {
+		if (status < 400) return;
 
-		if (!status || status < 400) return;
-
-		const apiMessage = error.response?.data?.error?.message;
+		const apiData = data as ApiErrorData | undefined;
+		const apiMessage = apiData?.error?.message;
 		const fallbackMessage = ERROR_MESSAGES[status] ?? 'Произошла ошибка';
 
 		notification.error({

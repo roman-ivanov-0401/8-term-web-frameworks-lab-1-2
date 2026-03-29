@@ -1,23 +1,25 @@
-import { axiosInstance } from '../../../services/httpService';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { baseQueryWithAuth, TOKEN_KEY, REFRESH_TOKEN_KEY } from '../../../services/httpService';
+import { localStorageRepository } from '../../../repositories/localStorageRepository';
 
-type AuthUser = {
+export type AuthUser = {
 	user_id: number;
 	user_name: string;
 	email: string;
 };
 
-type AuthResponse = {
+export type AuthResponse = {
 	token: string;
 	refresh_token: string;
 	user: AuthUser;
 };
 
-type SocialLink = {
+export type SocialLink = {
 	social_link_id: number;
 	link: string;
 };
 
-type MeResponse = {
+export type MeResponse = {
 	user_id: number;
 	user_name: string;
 	email: string;
@@ -27,34 +29,66 @@ type MeResponse = {
 	social_links: SocialLink[];
 };
 
-type RegisterPayload = {
+export type RegisterPayload = {
 	user_name: string;
 	email: string;
 	password: string;
 };
 
-type LoginPayload = {
+export type LoginPayload = {
 	email: string;
 	password: string;
 };
 
-export const authRepository = {
-	register: async (payload: RegisterPayload): Promise<AuthResponse> => {
-		const { data } = await axiosInstance.post<AuthResponse>('/auth/register', payload);
-		return data;
-	},
+export const authApi = createApi({
+	reducerPath: 'authApi',
+	baseQuery: baseQueryWithAuth,
+	tagTypes: ['Me'],
+	endpoints: (builder) => ({
+		login: builder.mutation<AuthResponse, LoginPayload>({
+			query: (body) => ({ url: '/auth/login', method: 'POST', body }),
+			invalidatesTags: ['Me'],
+			async onQueryStarted(_, { queryFulfilled }) {
+				try {
+					const { data } = await queryFulfilled;
+					localStorageRepository.set(TOKEN_KEY, data.token);
+					localStorageRepository.set(REFRESH_TOKEN_KEY, data.refresh_token);
+				} catch {
+					/* handled by baseQueryWithAuth */
+				}
+			},
+		}),
+		register: builder.mutation<AuthResponse, RegisterPayload>({
+			query: (body) => ({ url: '/auth/register', method: 'POST', body }),
+			invalidatesTags: ['Me'],
+			async onQueryStarted(_, { queryFulfilled }) {
+				try {
+					const { data } = await queryFulfilled;
+					localStorageRepository.set(TOKEN_KEY, data.token);
+					localStorageRepository.set(REFRESH_TOKEN_KEY, data.refresh_token);
+				} catch {
+					/* handled by baseQueryWithAuth */
+				}
+			},
+		}),
+		me: builder.query<MeResponse, void>({
+			query: () => '/auth/me',
+			providesTags: ['Me'],
+			keepUnusedDataFor: 300,
+		}),
+		logout: builder.mutation<void, void>({
+			query: () => ({ url: '/auth/logout', method: 'POST' }),
+			invalidatesTags: ['Me'],
+			async onQueryStarted(_, { queryFulfilled }) {
+				try {
+					await queryFulfilled;
+				} finally {
+					localStorageRepository.remove(TOKEN_KEY);
+					localStorageRepository.remove(REFRESH_TOKEN_KEY);
+				}
+			},
+		}),
+	}),
+});
 
-	login: async (payload: LoginPayload): Promise<AuthResponse> => {
-		const { data } = await axiosInstance.post<AuthResponse>('/auth/login', payload);
-		return data;
-	},
-
-	me: async (): Promise<MeResponse> => {
-		const { data } = await axiosInstance.get<MeResponse>('/auth/me');
-		return data;
-	},
-
-	logout: async (): Promise<void> => {
-		await axiosInstance.post('/auth/logout');
-	},
-};
+export const { useLoginMutation, useRegisterMutation, useMeQuery, useLogoutMutation } = authApi;

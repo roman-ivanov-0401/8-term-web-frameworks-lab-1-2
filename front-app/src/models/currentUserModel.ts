@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 export type CurrentUserSocialLink = {
 	social_link_id: number;
@@ -17,40 +17,38 @@ export type CurrentUser = {
 	social_links: CurrentUserSocialLink[];
 };
 
-type CurrentUserStore = {
+type CurrentUserState = {
 	currentUser: CurrentUser | null;
-	setCurrentUser: (user: CurrentUser | null) => void;
-	updateCurrentUser: (updates: Partial<CurrentUser>) => void;
-	addSocialLink: (link: CurrentUserSocialLink) => void;
-	removeSocialLink: (socialLinkId: number) => void;
 };
 
-export const useCurrentUserStore = create<CurrentUserStore>((set) => ({
+const initialState: CurrentUserState = {
 	currentUser: null,
+};
 
-	setCurrentUser: (user) => set({ currentUser: user }),
+export const currentUserSlice = createSlice({
+	name: 'currentUser',
+	initialState,
+	reducers: {
+		setCurrentUser: (state, action: PayloadAction<CurrentUser | null>) => {
+			state.currentUser = action.payload;
+		},
+		updateCurrentUser: (state, action: PayloadAction<Partial<CurrentUser>>) => {
+			if (state.currentUser) {
+				state.currentUser = { ...state.currentUser, ...action.payload };
+			}
+		},
+		addSocialLink: (state, action: PayloadAction<CurrentUserSocialLink>) => {
+			state.currentUser?.social_links.push(action.payload);
+		},
+		removeSocialLink: (state, action: PayloadAction<number>) => {
+			if (state.currentUser) {
+				state.currentUser.social_links = state.currentUser.social_links.filter(
+					(l: CurrentUserSocialLink) => l.social_link_id !== action.payload,
+				);
+			}
+		},
+	},
+});
 
-	updateCurrentUser: (updates) =>
-		set((state) => ({
-			currentUser: state.currentUser ? { ...state.currentUser, ...updates } : null,
-		})),
-
-	addSocialLink: (link) =>
-		set((state) => ({
-			currentUser: state.currentUser
-				? { ...state.currentUser, social_links: [...state.currentUser.social_links, link] }
-				: null,
-		})),
-
-	removeSocialLink: (socialLinkId) =>
-		set((state) => ({
-			currentUser: state.currentUser
-				? {
-						...state.currentUser,
-						social_links: state.currentUser.social_links.filter(
-							(l) => l.social_link_id !== socialLinkId,
-						),
-					}
-				: null,
-		})),
-}));
+export const { setCurrentUser, updateCurrentUser, addSocialLink, removeSocialLink } = currentUserSlice.actions;
+export default currentUserSlice.reducer;

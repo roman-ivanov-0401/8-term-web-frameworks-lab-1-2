@@ -1,4 +1,7 @@
-import { axiosInstance } from '../../../services/httpService';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { baseQueryWithAuth } from '../../../services/httpService';
+import { setCurrentUser, updateCurrentUser, addSocialLink, removeSocialLink } from '../../../models/currentUserModel';
+import { setNewLinkValue } from '../models/profileModel';
 
 type SocialLink = {
 	social_link_id: number;
@@ -7,7 +10,7 @@ type SocialLink = {
 	modified_at: string;
 };
 
-type UserProfile = {
+export type UserProfile = {
 	user_profile_id: number;
 	user_id: number;
 	user_description: string;
@@ -18,13 +21,18 @@ type UserProfile = {
 type UpdateProfilePayload = {
 	user_name: string;
 	user_description: string;
-	photo?: Blob;
+	photo?: File;
 };
 
 type UpdateProfileResponse = {
 	user_profile_id: number;
 	user_description: string;
 	photo_path: string | null;
+};
+
+type AddSocialLinkResponse = {
+	social_link_id: number;
+	link: string;
 };
 
 type FavoriteCategory = {
@@ -42,61 +50,109 @@ type FavoriteDrink = {
 	modified_at: string;
 };
 
-type FavoritesResponse = {
+export type FavoritesResponse = {
 	items: FavoriteDrink[];
 	total: number;
 	page: number;
 };
 
-type FavoritesParams = {
-	page?: number;
-	per_page?: number;
-};
+export const profileApi = createApi({
+	reducerPath: 'profileApi',
+	baseQuery: baseQueryWithAuth,
+	tagTypes: ['Profile', 'Favorites'],
+	endpoints: (builder) => ({
+		getProfile: builder.query<UserProfile, number>({
+			query: (userId) => `/users/${userId}`,
+			providesTags: (_result, _error, userId) => [{ type: 'Profile', id: userId }],
+			keepUnusedDataFor: 300,
+		}),
 
-type AddSocialLinkPayload = {
-	link: string;
-};
+		updateProfile: builder.mutation<UpdateProfileResponse, UpdateProfilePayload>({
+			query: (payload) => {
+				const formData = new FormData();
+				formData.append('user_name', payload.user_name);
+				formData.append('user_description', payload.user_description);
+				if (payload.photo) formData.append('photo', payload.photo);
+				return { url: '/users/me', method: 'PUT', body: formData };
+			},
+			invalidatesTags: ['Profile'],
+			async onQueryStarted(payload, { queryFulfilled, dispatch }) {
+				try {
+					const { data } = await queryFulfilled;
+					dispatch(updateCurrentUser({
+						user_name: payload.user_name,
+						user_description: payload.user_description,
+						photo_path: data.photo_path,
+					}));
+				} catch {
+					/* handled by baseQueryWithAuth */
+				}
+			},
+		}),
 
-type AddSocialLinkResponse = {
-	social_link_id: number;
-	link: string;
-};
+		deleteProfile: builder.mutation<void, void>({
+			query: () => ({ url: '/users/me', method: 'DELETE' }),
+			invalidatesTags: ['Profile', 'Favorites'],
+			async onQueryStarted(_, { queryFulfilled, dispatch }) {
+				try {
+					await queryFulfilled;
+					dispatch(setCurrentUser(null));
+				} catch {
+					/* handled by baseQueryWithAuth */
+				}
+			},
+		}),
 
-export const profileRepository = {
-	getProfile: async (userId: number): Promise<UserProfile> => {
-		const { data } = await axiosInstance.get<UserProfile>(`/users/${userId}`);
-		return data;
-	},
+		addSocialLink: builder.mutation<AddSocialLinkResponse, { userId: number; link: string }>({
+			query: ({ userId, link }) => ({
+				url: `/users/${userId}/social-links`,
+				method: 'POST',
+				body: { link },
+			}),
+			invalidatesTags: (_result, _error, { userId }) => [{ type: 'Profile', id: userId }],
+			async onQueryStarted(_, { queryFulfilled, dispatch }) {
+				try {
+					const { data } = await queryFulfilled;
+					dispatch(addSocialLink({ social_link_id: data.social_link_id, link: data.link, created_at: '', modified_at: '' }));
+					dispatch(setNewLinkValue(''));
+				} catch {
+					/* handled by baseQueryWithAuth */
+				}
+			},
+		}),
 
-	updateProfile: async (payload: UpdateProfilePayload): Promise<UpdateProfileResponse> => {
-		const formData = new FormData();
-		formData.append('user_name', payload.user_name);
-		formData.append('user_description', payload.user_description);
-		if (payload.photo) {
-			formData.append('photo', payload.photo);
-		}
+		deleteSocialLink: builder.mutation<void, { userId: number; socialLinkId: number }>({
+			query: ({ userId, socialLinkId }) => ({
+				url: `/users/${userId}/social-links/${socialLinkId}`,
+				method: 'DELETE',
+			}),
+			invalidatesTags: (_result, _error, { userId }) => [{ type: 'Profile', id: userId }],
+			async onQueryStarted({ socialLinkId }, { queryFulfilled, dispatch }) {
+				try {
+					await queryFulfilled;
+					dispatch(removeSocialLink(socialLinkId));
+				} catch {
+					/* handled by baseQueryWithAuth */
+				}
+			},
+		}),
 
-		const { data } = await axiosInstance.put<UpdateProfileResponse>('/users/me', formData, {
-			headers: { 'Content-Type': 'multipart/form-data' },
-		});
-		return data;
-	},
+		getFavorites: builder.query<FavoritesResponse, { userId: number; page?: number; perPage?: number }>({
+			query: ({ userId, page, perPage }) => ({
+				url: `/users/${userId}/favorites`,
+				params: { page, per_page: perPage },
+			}),
+			providesTags: (_result, _error, { userId }) => [{ type: 'Favorites', id: userId }],
+			keepUnusedDataFor: 60,
+		}),
+	}),
+});
 
-	deleteProfile: async (): Promise<void> => {
-		await axiosInstance.delete('/users/me');
-	},
-
-	addSocialLink: async (userId: number, payload: AddSocialLinkPayload): Promise<AddSocialLinkResponse> => {
-		const { data } = await axiosInstance.post<AddSocialLinkResponse>(`/users/${userId}/social-links`, payload);
-		return data;
-	},
-
-	deleteSocialLink: async (userId: number, socialLinkId: number): Promise<void> => {
-		await axiosInstance.delete(`/users/${userId}/social-links/${socialLinkId}`);
-	},
-
-	getFavorites: async (userId: number, params?: FavoritesParams): Promise<FavoritesResponse> => {
-		const { data } = await axiosInstance.get<FavoritesResponse>(`/users/${userId}/favorites`, { params });
-		return data;
-	},
-};
+export const {
+	useGetProfileQuery,
+	useUpdateProfileMutation,
+	useDeleteProfileMutation,
+	useAddSocialLinkMutation,
+	useDeleteSocialLinkMutation,
+	useGetFavoritesQuery,
+} = profileApi;

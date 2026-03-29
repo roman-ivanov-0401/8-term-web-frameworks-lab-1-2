@@ -1,20 +1,33 @@
-import { create } from 'zustand';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { UploadFile } from 'antd';
 
-type ProfileStore = {
+type ProfileState = {
 	editOpen: boolean;
 	newLinkValue: string;
 	fileList: UploadFile[];
-	setEditOpen: (open: boolean) => void;
-	setNewLinkValue: (value: string) => void;
-	setFileList: (fileList: UploadFile[]) => void;
 };
 
-export const useProfileStore = create<ProfileStore>((set) => ({
+const initialState: ProfileState = {
 	editOpen: false,
 	newLinkValue: '',
 	fileList: [],
-	setEditOpen: (open) => set({ editOpen: open }),
-	setNewLinkValue: (value) => set({ newLinkValue: value }),
-	setFileList: (fileList) => set({ fileList }),
-}));
+};
+
+export const profileSlice = createSlice({
+	name: 'profile',
+	initialState,
+	reducers: {
+		setEditOpen: (state, action: PayloadAction<boolean>) => {
+			state.editOpen = action.payload;
+		},
+		setNewLinkValue: (state, action: PayloadAction<string>) => {
+			state.newLinkValue = action.payload;
+		},
+		setFileList: (state, action: PayloadAction<UploadFile[]>) => {
+			state.fileList = action.payload;
+		},
+	},
+});
+
+export const { setEditOpen, setNewLinkValue, setFileList } = profileSlice.actions;
+export default profileSlice.reducer;

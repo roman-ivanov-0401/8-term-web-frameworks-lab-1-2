@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import { Button, Drawer, Form, Input, Upload } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
-import { profileModule, type UpdateProfilePayload, type UserProfile } from '../../modules/ProfileModule';
-import { useProfileStore } from '../../models/profileModel';
+import { profileModule, type UserProfile } from '../../modules/ProfileModule';
+import { useUpdateProfileMutation } from '../../repositories/profileRepository';
+import { useAppSelector } from '../../../../store';
 import s from './EditProfileDrawer.module.scss';
 
 type EditFormValues = {
@@ -16,8 +17,9 @@ type EditProfileDrawerProps = {
 };
 
 function EditProfileDrawer({ open, profile }: EditProfileDrawerProps) {
-	const fileList = useProfileStore((state) => state.fileList);
+	const fileList = useAppSelector((state) => state.profile.fileList);
 	const [form] = Form.useForm<EditFormValues>();
+	const [updateProfile, { isLoading }] = useUpdateProfileMutation();
 
 	useEffect(() => {
 		if (open) {
@@ -38,19 +40,19 @@ function EditProfileDrawer({ open, profile }: EditProfileDrawerProps) {
 		}
 	}, [open, profile, form]);
 
-	function handleFinish(values: EditFormValues) {
-		const payload: UpdateProfilePayload = {
+	async function handleFinish(values: EditFormValues) {
+		await updateProfile({
 			user_name: values.user_name,
 			user_description: values.user_description,
 			photo: fileList[0]?.originFileObj as File | undefined,
-		};
-		profileModule.updateProfile(payload);
+		}).unwrap();
+		profileModule.closeEditDrawer();
 	}
 
 	const drawerFooter = (
 		<div className={s.drawerFooter}>
 			<Button onClick={profileModule.closeEditDrawer}>Отмена</Button>
-			<Button type="primary" onClick={() => form.submit()}>
+			<Button type="primary" loading={isLoading} onClick={() => form.submit()}>
 				Сохранить
 			</Button>
 		</div>

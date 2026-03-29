@@ -1,5 +1,5 @@
 import { Button, Form, Input } from 'antd';
-import { authModule, type LoginFormValues } from '../../modules/AuthModule';
+import { useLoginMutation, type LoginPayload } from '../../repositories/authRepository';
 import s from './LoginForm.module.scss';
 
 const emailRules = [
@@ -17,10 +17,11 @@ type LoginFormProps = {
 };
 
 function LoginForm({ onSuccess }: LoginFormProps) {
-	const [form] = Form.useForm<LoginFormValues>();
+	const [form] = Form.useForm<LoginPayload>();
+	const [login, { isLoading }] = useLoginMutation();
 
-	async function handleFinish(values: LoginFormValues) {
-		await authModule.login(values);
+	async function handleFinish(values: LoginPayload) {
+		await login(values).unwrap();
 		onSuccess();
 	}
 
@@ -33,7 +34,7 @@ function LoginForm({ onSuccess }: LoginFormProps) {
 				<Input.Password placeholder="••••••" />
 			</Form.Item>
 			<Form.Item className={s.formLastItem}>
-				<Button type="primary" htmlType="submit" block={true}>
+				<Button type="primary" htmlType="submit" loading={isLoading} block={true}>
 					Войти
 				</Button>
 			</Form.Item>

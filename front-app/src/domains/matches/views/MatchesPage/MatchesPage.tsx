@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from 'antd';
-import { matchesModule, type MatchItem } from '../../modules/MatchesModule';
+import { type MatchItem } from '../../modules/MatchesModule';
+import { useGetMatchesQuery } from '../../repositories/matchesRepository';
 import MatchModal from '../MatchModal/MatchModal';
 import s from './MatchesPage.module.scss';
 
@@ -24,9 +25,10 @@ function centerPos(targetIndex: number, itemCount: number): number {
 
 function MatchesPage() {
 	const [state, setState] = useState<SearchState>('idle');
-	const [matches, setMatches] = useState<MatchItem[]>([]);
 	const [matchIndex, setMatchIndex] = useState(0);
 	const [modalOpen, setModalOpen] = useState(false);
+
+	const { data: matches = [] } = useGetMatchesQuery();
 
 	const drumRef = useRef<HTMLDivElement>(null);
 	const rafRef = useRef<number>(0);
@@ -34,7 +36,6 @@ function MatchesPage() {
 	const velRef = useRef(0);
 
 	useEffect(() => {
-		matchesModule.getMatches().then(setMatches);
 		return () => cancelAnimationFrame(rafRef.current);
 	}, []);
 

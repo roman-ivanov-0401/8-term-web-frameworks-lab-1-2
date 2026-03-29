@@ -1,39 +1,17 @@
+import { authApi, type MeResponse } from '../repositories/authRepository';
+import { store } from '../../../store';
 import { localStorageRepository } from '../../../repositories/localStorageRepository';
-import { authRepository } from '../repositories/authRepository';
-
-const TOKEN_KEY = 'auth_token';
-const REFRESH_TOKEN_KEY = 'refresh_token';
-
-export type LoginFormValues = {
-	email: string;
-	password: string;
-};
-
-export type RegisterFormValues = {
-	user_name: string;
-	email: string;
-	password: string;
-};
+import { TOKEN_KEY } from '../../../services/httpService';
 
 export const authModule = {
-	login: async (values: LoginFormValues): Promise<void> => {
-		const { token, refresh_token } = await authRepository.login(values);
-		localStorageRepository.set(TOKEN_KEY, token);
-		localStorageRepository.set(REFRESH_TOKEN_KEY, refresh_token);
+	me: async (): Promise<MeResponse> => {
+		return store
+			.dispatch(authApi.endpoints.me.initiate(undefined, { forceRefetch: true }))
+			.unwrap();
 	},
-
-	register: async (values: RegisterFormValues): Promise<void> => {
-		const { token, refresh_token } = await authRepository.register(values);
-		localStorageRepository.set(TOKEN_KEY, token);
-		localStorageRepository.set(REFRESH_TOKEN_KEY, refresh_token);
-	},
-
-	me: authRepository.me,
 
 	logout: async (): Promise<void> => {
-		await authRepository.logout();
-		localStorageRepository.remove(TOKEN_KEY);
-		localStorageRepository.remove(REFRESH_TOKEN_KEY);
+		await store.dispatch(authApi.endpoints.logout.initiate()).unwrap();
 	},
 
 	getToken: (): string | null => {

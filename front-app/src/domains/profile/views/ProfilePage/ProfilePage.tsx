@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Button, Input, Popconfirm, Spin } from 'antd';
 import { DeleteOutlined, EditOutlined, LinkOutlined, PlusOutlined } from '@ant-design/icons';
-import { profileModule, type AddSocialLinkPayload } from '../../modules/ProfileModule';
-import { useCurrentUserStore } from '../../../../models/currentUserModel';
-import { useProfileStore } from '../../models/profileModel';
+import { profileModule } from '../../modules/ProfileModule';
+import { useAddSocialLinkMutation, useDeleteProfileMutation, useDeleteSocialLinkMutation } from '../../repositories/profileRepository';
+import { useAppSelector } from '../../../../store';
 import EditProfileDrawer from '../EditProfileDrawer/EditProfileDrawer';
 import s from './ProfilePage.module.scss';
 
@@ -25,10 +25,14 @@ function linkLabel(url: string): string {
 }
 
 function ProfilePage() {
-	const profile = useCurrentUserStore((state) => state.currentUser);
-	const editOpen = useProfileStore((state) => state.editOpen);
-	const newLinkValue = useProfileStore((state) => state.newLinkValue);
+	const profile = useAppSelector((state) => state.currentUser.currentUser);
+	const editOpen = useAppSelector((state) => state.profile.editOpen);
+	const newLinkValue = useAppSelector((state) => state.profile.newLinkValue);
 	const [avatarError, setAvatarError] = useState(false);
+
+	const [addSocialLink] = useAddSocialLinkMutation();
+	const [deleteSocialLink] = useDeleteSocialLinkMutation();
+	const [deleteProfile] = useDeleteProfileMutation();
 
 	useEffect(() => {
 		profileModule.getMyProfile();
@@ -42,18 +46,16 @@ function ProfilePage() {
 		if (!profile) return;
 		const link = newLinkValue.trim();
 		if (!link) return;
-
-		const payload: AddSocialLinkPayload = { link };
-		await profileModule.addSocialLink(profile.user_id, payload);
+		await addSocialLink({ userId: profile.user_id, link }).unwrap();
 	}
 
 	async function handleDeleteLink(socialLinkId: number) {
 		if (!profile) return;
-		await profileModule.deleteSocialLink(profile.user_id, socialLinkId);
+		await deleteSocialLink({ userId: profile.user_id, socialLinkId }).unwrap();
 	}
 
 	async function handleDeleteProfile() {
-		await profileModule.deleteProfile();
+		await deleteProfile().unwrap();
 	}
 
 	if (!profile) {

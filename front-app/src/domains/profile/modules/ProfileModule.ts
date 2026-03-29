@@ -1,77 +1,46 @@
 import type { UploadFile } from 'antd';
-import { authModule } from '../../auth/modules/AuthModule';
-import { profileRepository } from '../repositories/profileRepository';
-import { useCurrentUserStore } from '../../../models/currentUserModel';
-import { useProfileStore } from '../models/profileModel';
+import { authApi } from '../../auth/repositories/authRepository';
+import { profileApi } from '../repositories/profileRepository';
+import { store } from '../../../store';
+import { setCurrentUser } from '../../../models/currentUserModel';
+import { setEditOpen, setNewLinkValue, setFileList } from '../models/profileModel';
 
 export type { CurrentUser as UserProfile, CurrentUserSocialLink as SocialLink } from '../../../models/currentUserModel';
 
-export type UpdateProfilePayload = {
-	user_name: string;
-	user_description: string;
-	photo?: File;
-};
-
-export type AddSocialLinkPayload = {
-	link: string;
-};
-
 export const profileModule = {
 	getMyProfile: async (): Promise<void> => {
-		const me = await authModule.me();
-		const profile = await profileRepository.getProfile(me.user_id);
-		useCurrentUserStore.getState().setCurrentUser({
-			...profile,
-			user_name: me.user_name,
-			email: me.email,
-		});
-
-		console.log({ ...profile, email: me.email });
-	},
-
-	updateProfile: async (payload: UpdateProfilePayload): Promise<void> => {
-		const { photo_path } = await profileRepository.updateProfile(payload);
-		useCurrentUserStore.getState().updateCurrentUser({
-			user_name: payload.user_name,
-			user_description: payload.user_description,
-			photo_path,
-		});
-		useProfileStore.getState().setEditOpen(false);
-	},
-
-	deleteProfile: async (): Promise<void> => {
-		await profileRepository.deleteProfile();
-		useCurrentUserStore.getState().setCurrentUser(null);
-	},
-
-	addSocialLink: async (userId: number, payload: AddSocialLinkPayload): Promise<void> => {
-		const { social_link_id, link } = await profileRepository.addSocialLink(userId, payload);
-		useCurrentUserStore.getState().addSocialLink({ social_link_id, link, created_at: '', modified_at: '' });
-		useProfileStore.getState().setNewLinkValue('');
-	},
-
-	deleteSocialLink: async (userId: number, socialLinkId: number): Promise<void> => {
-		await profileRepository.deleteSocialLink(userId, socialLinkId);
-		useCurrentUserStore.getState().removeSocialLink(socialLinkId);
+		const me = await store
+			.dispatch(authApi.endpoints.me.initiate(undefined, { forceRefetch: true }))
+			.unwrap();
+		const profile = await store
+			.dispatch(profileApi.endpoints.getProfile.initiate(me.user_id, { forceRefetch: true }))
+			.unwrap();
+		store.dispatch(
+			setCurrentUser({
+				...profile,
+				user_name: me.user_name,
+				email: me.email,
+			}),
+		);
 	},
 
 	openEditDrawer: (): void => {
-		useProfileStore.getState().setEditOpen(true);
+		store.dispatch(setEditOpen(true));
 	},
 
 	closeEditDrawer: (): void => {
-		useProfileStore.getState().setEditOpen(false);
+		store.dispatch(setEditOpen(false));
 	},
 
 	setNewLinkValue: (value: string): void => {
-		useProfileStore.getState().setNewLinkValue(value);
+		store.dispatch(setNewLinkValue(value));
 	},
 
 	setFileList: (fileList: UploadFile[]): void => {
-		useProfileStore.getState().setFileList(fileList);
+		store.dispatch(setFileList(fileList));
 	},
 
 	resetFileList: (): void => {
-		useProfileStore.getState().setFileList([]);
+		store.dispatch(setFileList([]));
 	},
 };

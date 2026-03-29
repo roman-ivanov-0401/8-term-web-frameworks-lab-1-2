@@ -1,38 +1,44 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Button, Rate, Spin, Tag } from 'antd';
+import { Button, Rate, Spin } from 'antd';
 import { HeartFilled, HeartOutlined } from '@ant-design/icons';
-import { drinkModule, type DrinkDetail } from '../../modules/DrinkModule';
+import { useGetDrinkQuery, useToggleFavoriteMutation, useUpdateDrinkRatingMutation } from '../../../../repositories/catalogRepository';
+import { useMeQuery } from '../../../../../../domains/auth/repositories/authRepository';
 import CoffeeGlass from '../CoffeeGlass/CoffeeGlass';
 import IngredientLegend from '../IngredientLegend/IngredientLegend';
 import s from './DrinkPage.module.scss';
 
 function DrinkPage() {
 	const { id } = useParams<{ id: string }>();
-	const [drink, setDrink] = useState<DrinkDetail | null>(null);
+	const drinkId = Number(id);
+
+	const { data: drink } = useGetDrinkQuery(drinkId);
+	const { data: me } = useMeQuery();
+
+	const [toggleFavorite] = useToggleFavoriteMutation();
+	const [updateDrinkRating] = useUpdateDrinkRatingMutation();
+
 	const [isFavorite, setIsFavorite] = useState(false);
 	const [rating, setRating] = useState(0);
 
 	useEffect(() => {
-		if (!id) return;
-		drinkModule.getDrink(Number(id)).then((d) => {
-			setDrink(d);
-			setIsFavorite(d.isInFavorites);
-			setRating(d.userRating ?? 0);
-		});
-	}, [id]);
+		if (drink) {
+			setIsFavorite(drink.isInFavorites);
+			setRating(drink.userRating ?? 0);
+		}
+	}, [drink]);
 
 	async function handleToggleFavorite() {
-		if (!drink) return;
-		const { isFavorite: newFavorite, rating: newRating } = await drinkModule.toggleFavorite(drink.drinkId);
-		setIsFavorite(newFavorite);
-		setRating(newRating);
+		if (!me) return;
+		const { added } = await toggleFavorite({ userId: me.user_id, drinkId }).unwrap();
+		setIsFavorite(added);
+		if (added) setRating(0);
 	}
 
 	async function handleRatingChange(value: number) {
-		if (!drink || !isFavorite) return;
+		if (!me || !isFavorite) return;
 		setRating(value);
-		await drinkModule.updateRating(drink.drinkId, value);
+		await updateDrinkRating({ userId: me.user_id, drinkId, rating: value });
 	}
 
 	if (!drink) {
@@ -52,9 +58,7 @@ function DrinkPage() {
 				</div>
 
 				<div className={s.rightPanel}>
-					<Tag color="brown" className={s.categoryTag}>
-						{drink.category.name}
-					</Tag>
+					<span className={s.categoryTag}>{drink.category.name}</span>
 
 					<h1 className={s.drinkName}>{drink.name}</h1>
 					<p className={s.description}>{drink.description}</p>

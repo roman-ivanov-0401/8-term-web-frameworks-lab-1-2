@@ -1,5 +1,5 @@
 import { Button, Form, Input } from 'antd';
-import { authModule, type RegisterFormValues } from '../../modules/AuthModule';
+import { useRegisterMutation, type RegisterPayload } from '../../repositories/authRepository';
 import s from './RegisterForm.module.scss';
 
 const emailRules = [
@@ -17,10 +17,11 @@ type RegisterFormProps = {
 };
 
 function RegisterForm({ onSuccess }: RegisterFormProps) {
-	const [form] = Form.useForm<RegisterFormValues>();
+	const [form] = Form.useForm<RegisterPayload>();
+	const [register, { isLoading }] = useRegisterMutation();
 
-	async function handleFinish(values: RegisterFormValues) {
-		await authModule.register(values);
+	async function handleFinish(values: RegisterPayload) {
+		await register(values).unwrap();
 		onSuccess();
 	}
 
@@ -40,7 +41,7 @@ function RegisterForm({ onSuccess }: RegisterFormProps) {
 				<Input.Password placeholder="••••••" />
 			</Form.Item>
 			<Form.Item className={s.formLastItem}>
-				<Button type="primary" htmlType="submit" block={true}>
+				<Button type="primary" htmlType="submit" loading={isLoading} block={true}>
 					Зарегистрироваться
 				</Button>
 			</Form.Item>
