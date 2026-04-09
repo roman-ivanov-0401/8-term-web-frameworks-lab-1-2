@@ -1,0 +1,15 @@
+{
+  "name": "@app/shared",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "dependencies": {
+    "antd": "^6.3.1",
+    "axios": "^1.13.6",
+    "zustand": "^5.0.11"
+  },
+  "peerDependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  }
+}

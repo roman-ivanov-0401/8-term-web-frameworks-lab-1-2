@@ -53,14 +53,31 @@ services:
       postgres:
         condition: service_healthy
 
-  frontend:
+  catalog-app:
     build:
-      context: .
-      dockerfile: front-app/Dockerfile
+      context: ./monorepo
+      dockerfile: services/catalog/Dockerfile
+    restart: unless-stopped
+
+  matches-app:
+    build:
+      context: ./monorepo
+      dockerfile: services/matches/Dockerfile
+    restart: unless-stopped
+
+  host-app:
+    build:
+      context: ./monorepo
+      dockerfile: services/host/Dockerfile
+      args:
+        CATALOG_URL: /remote/catalog
+        MATCHES_URL: /remote/matches
     restart: unless-stopped
     ports:
       - '4200:80'
     depends_on:
+      - catalog-app
+      - matches-app
       - auth-service
       - main-service
 

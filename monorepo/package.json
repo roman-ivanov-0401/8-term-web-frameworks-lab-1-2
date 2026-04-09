@@ -1,0 +1,14 @@
+{
+  "name": "coffee-match-monorepo",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "services/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=services/host",
+    "build": "npm run build --workspace=services/host",
+    "dev:catalog": "npm run dev --workspace=services/catalog",
+    "dev:matches": "npm run dev --workspace=services/matches"
+  }
+}

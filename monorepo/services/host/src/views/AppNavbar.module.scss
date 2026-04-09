@@ -1,0 +1,99 @@
+@use 'styles/variables' as *;
+
+$navbar-height: 56px;
+
+// ─── Desktop ──────────────────────────────────────────────────────────────────
+
+.header {
+	position: sticky;
+	top: 0;
+	z-index: 200;
+	background: $color-primary-dark;
+	border-bottom: 1px solid rgba($color-border, 0.25);
+	height: $navbar-height;
+}
+
+.inner {
+	max-width: 1400px;
+	margin: 0 auto;
+	height: 100%;
+	padding: 0 24px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.left {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.right {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.logo {
+	font-size: 17px;
+	font-weight: 700;
+	color: #fff;
+	white-space: nowrap;
+	padding-right: 12px;
+}
+
+.navBtn {
+	color: rgba(#fff, 0.75) !important;
+	font-size: 14px;
+
+	&:hover {
+		color: #fff !important;
+		background: rgba(#fff, 0.08) !important;
+	}
+
+	:global(.anticon) {
+		font-size: 14px;
+	}
+}
+
+.navBtnActive {
+	color: #fff !important;
+	background: rgba(#fff, 0.14) !important;
+}
+
+.navBtnDanger {
+	color: rgba(#ff7875, 0.85) !important;
+
+	&:hover {
+		color: #ff7875 !important;
+		background: rgba(#ff4d4f, 0.12) !important;
+	}
+}
+
+// ─── Mobile ───────────────────────────────────────────────────────────────────
+
+.mobileHeader {
+	position: sticky;
+	top: 0;
+	z-index: 200;
+	height: $navbar-height;
+	background: $color-primary-dark;
+	border-bottom: 1px solid rgba($color-border, 0.25);
+	padding: 0 16px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.burgerBtn {
+	color: #fff !important;
+
+	&:hover {
+		background: rgba(#fff, 0.08) !important;
+	}
+}
+
+.burgerIcon {
+	font-size: 20px;
+}
